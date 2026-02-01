@@ -1,0 +1,284 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CU Bazar Design System - Campus Marketplace Vibes */
+
+
+
+@layer base {
+  :root {
+    /* Light Theme - Energetic & Fresh */
+    --background: 40 30% 98%;
+    --foreground: 220 25% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 25% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 25% 12%;
+
+    /* CU Bazar Orange - Primary Brand */
+    --primary: 28 95% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Navy Secondary */
+    --secondary: 220 60% 20%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 40 20% 94%;
+    --muted-foreground: 220 15% 45%;
+
+    --accent: 28 85% 95%;
+    --accent-foreground: 28 95% 40%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 20% 90%;
+    --input: 220 20% 90%;
+    --ring: 28 95% 55%;
+
+    --radius: 0.75rem;
+
+    /* Custom CU Bazar tokens */
+    --cu-orange: 28 95% 55%;
+    --cu-amber: 38 92% 50%;
+    --cu-navy: 220 60% 20%;
+    --cu-success: 145 65% 42%;
+    --cu-warning: 38 92% 50%;
+    --cu-gradient-start: 28 95% 55%;
+    --cu-gradient-end: 38 92% 50%;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 28 95% 55%;
+
+    /* Liquid Glass Variables - Light */
+    --c-glass: #bbbbbc;
+    --c-light: #fff;
+    --c-dark: #000;
+    --c-content: #224;
+    --c-action: hsl(28, 95%, 55%);
+    --glass-reflex-dark: 1;
+    --glass-reflex-light: 1;
+    --saturation: 150%;
+  }
+
+  /* Dark Theme */
+  .dark {
+    --background: 220 25% 8%;
+    --foreground: 40 20% 96%;
+
+    --card: 220 25% 12%;
+    --card-foreground: 40 20% 96%;
+
+    --popover: 220 25% 12%;
+    --popover-foreground: 40 20% 96%;
+
+    --primary: 28 95% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 40% 30%;
+    --secondary-foreground: 40 20% 96%;
+
+    --muted: 220 30% 18%;
+    --muted-foreground: 220 15% 60%;
+
+    --accent: 28 60% 20%;
+    --accent-foreground: 28 95% 70%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 30% 22%;
+    --input: 220 30% 22%;
+    --ring: 28 95% 55%;
+
+    /* Liquid Glass Variables - Dark */
+    --c-glass: #bbbbbc;
+    --c-light: #fff;
+    --c-dark: #000;
+    --c-content: #e1e1e1;
+    --c-action: #03d5ff;
+    --glass-reflex-dark: 2;
+    --glass-reflex-light: 0.3;
+    --saturation: 150%;
+
+    --sidebar-background: 220 25% 10%;
+    --sidebar-foreground: 40 20% 90%;
+    --sidebar-primary: 28 95% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 30% 18%;
+    --sidebar-accent-foreground: 40 20% 90%;
+    --sidebar-border: 220 30% 22%;
+    --sidebar-ring: 28 95% 55%;
+  }
+
+  /* Dim Theme */
+  .dim {
+    --background: 220 20% 14%;
+    --foreground: 40 15% 90%;
+
+    --card: 220 20% 18%;
+    --card-foreground: 40 15% 90%;
+
+    --popover: 220 20% 18%;
+    --popover-foreground: 40 15% 90%;
+
+    --primary: 28 90% 58%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 35% 28%;
+    --secondary-foreground: 40 15% 90%;
+
+    --muted: 220 25% 22%;
+    --muted-foreground: 220 12% 55%;
+
+    --accent: 28 50% 25%;
+    --accent-foreground: 28 90% 75%;
+
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 25% 26%;
+    --input: 220 25% 26%;
+    --ring: 28 90% 58%;
+
+    /* Liquid Glass Variables - Dim */
+    --c-light: #99deff;
+    --c-dark: #20001b;
+    --c-glass: hsl(335 250% 74% / 1);
+    --c-content: #d5dbe2;
+    --c-action: #ff48a9;
+    --glass-reflex-dark: 2;
+    --glass-reflex-light: 0.7;
+    --saturation: 200%;
+
+    --sidebar-background: 220 20% 16%;
+    --sidebar-foreground: 40 15% 88%;
+    --sidebar-primary: 28 90% 58%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 25% 22%;
+    --sidebar-accent-foreground: 40 15% 88%;
+    --sidebar-border: 220 25% 26%;
+    --sidebar-ring: 28 90% 58%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', sans-serif;
+  }
+}
+
+@layer components {
+  /* Gradient backgrounds */
+  .cu-gradient {
+    @apply bg-gradient-to-r from-primary to-[hsl(38,92%,50%)];
+  }
+
+  .cu-gradient-text {
+    @apply bg-gradient-to-r from-primary to-[hsl(38,92%,50%)] bg-clip-text text-transparent;
+  }
+
+  /* Glass effect */
+  .glass {
+    @apply backdrop-blur-xl bg-card/80 border border-border/50;
+  }
+
+  .glass-strong {
+    @apply backdrop-blur-2xl bg-card/90 border border-border/60;
+  }
+
+  /* Card hover effects */
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1;
+  }
+
+  /* Premium badge glow */
+  .premium-glow {
+    @apply relative;
+    box-shadow: 0 0 30px hsl(38 92% 50% / 0.3);
+  }
+
+  /* Floating animation */
+  .float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  /* Video overlay gradient */
+  .video-overlay {
+    @apply absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background;
+  }
+}
+
+@layer utilities {
+  /* Custom scrollbar */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Smooth scroll */
+  .scroll-smooth {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Keyframe animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px hsl(28 95% 55% / 0.4);
+  }
+  50% {
+    box-shadow: 0 0 40px hsl(28 95% 55% / 0.6);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.6s ease-out forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}

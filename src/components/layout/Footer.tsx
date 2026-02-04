@@ -15,7 +15,7 @@ export function Footer() {
               <span className="font-display font-bold text-xl">CU Bazar</span>
             </div>
             <p className="text-secondary-foreground/80 text-sm">
-              The ultimate marketplace for Chandigarh University students. Buy, sell, and discover amazing deals within your campus community.
+              Buy smart on campus, sell without stress, From hostel to home - CU Bazar does the rest.
             </p>
             <div className="flex gap-3">
               <a href="#" className="p-2 rounded-lg bg-secondary-foreground/10 hover:bg-primary hover:text-primary-foreground transition-colors">
@@ -59,15 +59,15 @@ export function Footer() {
             <ul className="space-y-3 text-sm text-secondary-foreground/80">
               <li className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
-                <span>Chandigarh University, NH-95, Mohali, Punjab</span>
+                <span>Chandigarh University, Mohali, Punjab</span>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 shrink-0" />
-                <span>support@cubazar.in</span>
+                <span>viratass02@gmail.com</span>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 shrink-0" />
-                <span>+91 98765 43210</span>
+                <span>+91 9466166750</span>
               </li>
             </ul>
           </div>

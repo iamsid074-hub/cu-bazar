@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles, Shield, Users, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/products/ProductCard';
-import { CategoryCard } from '@/components/products/CategoryCard';
+import { CategoryDock } from '@/components/products/CategoryDock';
 import { VideoBackground } from '@/components/layout/VideoBackground';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -133,11 +133,7 @@ export default function HomePage() {
             </Button>
           </div>
           
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
-            {categories.map((category, index) => (
-              <CategoryCard key={category.id} category={category} index={index} />
-            ))}
-          </div>
+          <CategoryDock categories={categories} />
         </div>
       </section>
 

@@ -17,6 +17,7 @@ import AuthPage from "./pages/AuthPage";
 import PremiumPage from "./pages/PremiumPage";
 import HelpPage from "./pages/HelpPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
+import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const App = () => (
                       <Route path="/premium" element={<PremiumPage />} />
                       <Route path="/help" element={<HelpPage />} />
                       <Route path="/product/:id" element={<ProductDetailPage />} />
+                      <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </ErrorBoundary>

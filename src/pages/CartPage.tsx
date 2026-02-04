@@ -1,21 +1,35 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Truck, CreditCard, Banknote, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
+import { toast } from 'sonner';
+
+type PaymentMethod = 'cod' | 'online';
 
 export default function CartPage() {
   const { user } = useAuth();
   const { items, loading, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
   const navigate = useNavigate();
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cod');
 
   useEffect(() => {
     if (!user) {
       navigate('/auth?redirect=/cart');
     }
   }, [user, navigate]);
+
+  const handleCheckout = () => {
+    if (paymentMethod === 'cod') {
+      const orderTotal = totalPrice;
+      clearCart();
+      navigate(`/order-confirmation?total=${orderTotal}`);
+    } else {
+      toast.info('Online payment coming soon!');
+    }
+  };
 
   if (loading) {
     return (
@@ -129,33 +143,106 @@ export default function CartPage() {
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="sticky top-24 p-6 bg-card rounded-xl border border-border/50"
+                className="sticky top-24 space-y-4"
               >
-                <h2 className="font-display font-bold text-xl mb-4">Order Summary</h2>
-                
-                <div className="space-y-3 pb-4 border-b border-border/50">
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Subtotal</span>
-                    <span>₹{totalPrice.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Platform Fee</span>
-                    <span>₹0</span>
+                {/* Payment Method Selection */}
+                <div className="p-5 bg-card rounded-xl border border-border/50">
+                  <h3 className="font-display font-bold text-lg mb-4 flex items-center gap-2">
+                    <CreditCard className="h-5 w-5 text-primary" />
+                    Payment Method
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    {/* Cash on Delivery */}
+                    <button
+                      onClick={() => setPaymentMethod('cod')}
+                      className={`w-full p-4 rounded-xl border-2 transition-all flex items-center gap-4 ${
+                        paymentMethod === 'cod'
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border/50 hover:border-primary/50'
+                      }`}
+                    >
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                        paymentMethod === 'cod' ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                      }`}>
+                        <Banknote className="h-6 w-6" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <p className="font-semibold text-foreground">Cash on Delivery</p>
+                        <p className="text-sm text-muted-foreground">Pay when you receive</p>
+                      </div>
+                      {paymentMethod === 'cod' && (
+                        <CheckCircle2 className="h-5 w-5 text-primary" />
+                      )}
+                    </button>
+
+                    {/* Online Payment */}
+                    <button
+                      onClick={() => setPaymentMethod('online')}
+                      className={`w-full p-4 rounded-xl border-2 transition-all flex items-center gap-4 ${
+                        paymentMethod === 'online'
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border/50 hover:border-primary/50'
+                      }`}
+                    >
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                        paymentMethod === 'online' ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                      }`}>
+                        <CreditCard className="h-6 w-6" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <p className="font-semibold text-foreground">Online Payment</p>
+                        <p className="text-sm text-muted-foreground">UPI, Cards, Net Banking</p>
+                      </div>
+                      {paymentMethod === 'online' && (
+                        <CheckCircle2 className="h-5 w-5 text-primary" />
+                      )}
+                    </button>
                   </div>
                 </div>
-                
-                <div className="flex justify-between font-display font-bold text-xl mt-4 mb-6">
-                  <span>Total</span>
-                  <span className="text-primary">₹{totalPrice.toLocaleString()}</span>
+
+                {/* Price Summary */}
+                <div className="p-5 bg-card rounded-xl border border-border/50">
+                  <h3 className="font-display font-bold text-lg mb-4">Order Summary</h3>
+                  
+                  <div className="space-y-3 pb-4 border-b border-border/50">
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Subtotal</span>
+                      <span>₹{totalPrice.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Delivery</span>
+                      <span className="text-green-500">Free</span>
+                    </div>
+                    {paymentMethod === 'cod' && (
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>COD Charges</span>
+                        <span>₹0</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex justify-between font-display font-bold text-xl mt-4 mb-6">
+                    <span>Total</span>
+                    <span className="text-primary">₹{totalPrice.toLocaleString()}</span>
+                  </div>
+
+                  <Button 
+                    className="w-full cu-gradient border-0" 
+                    size="lg"
+                    onClick={handleCheckout}
+                  >
+                    <Truck className="mr-2 h-5 w-5" />
+                    {paymentMethod === 'cod' ? 'Place Order (COD)' : 'Pay Now'}
+                  </Button>
+
+                  <p className="text-xs text-muted-foreground text-center mt-4">
+                    {paymentMethod === 'cod' 
+                      ? 'Pay cash when your order arrives'
+                      : 'Secure payments powered by Razorpay'
+                    }
+                  </p>
                 </div>
-
-                <Button className="w-full cu-gradient border-0" size="lg">
-                  Proceed to Checkout
-                </Button>
-
-                <p className="text-xs text-muted-foreground text-center mt-4">
-                  Secure payments powered by Razorpay
-                </p>
               </motion.div>
             </div>
           </div>

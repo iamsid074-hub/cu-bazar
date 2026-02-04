@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -33,10 +33,19 @@ import { LiquidGlassToggle } from '@/components/ui/liquid-glass-toggle';
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [scrolled, setScrolled] = useState(false);
   const { user, signOut } = useAuth();
   const { totalItems } = useCart();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,9 +54,22 @@ export function Navbar() {
     }
   };
 
-
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass-strong">
+    <motion.nav 
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-700 ease-out border-0 ${
+        scrolled 
+          ? 'bg-background/50 backdrop-blur-2xl' 
+          : 'bg-background/20 backdrop-blur-xl'
+      }`}
+      style={{
+        boxShadow: scrolled 
+          ? '0 8px 32px -8px hsl(var(--primary) / 0.08), inset 0 -1px 0 0 hsl(var(--foreground) / 0.03)' 
+          : 'none',
+      }}
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+    >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -166,7 +188,7 @@ export function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden border-t border-border/50 glass-strong"
+            className="md:hidden border-t border-border/10 bg-background/70 backdrop-blur-2xl"
           >
             <div className="container mx-auto px-4 py-4 space-y-2">
               <Link to="/browse" onClick={() => setMobileMenuOpen(false)} className="block py-2 px-4 rounded-lg hover:bg-muted">
@@ -214,6 +236,6 @@ export function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
-    </nav>
+    </motion.nav>
   );
 }

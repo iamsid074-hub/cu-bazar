@@ -1,0 +1,202 @@
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { 
+  Laptop, 
+  BookOpen, 
+  Shirt, 
+  Sofa, 
+  Dumbbell, 
+  Car, 
+  Pencil, 
+  Package,
+  LucideIcon 
+} from 'lucide-react';
+
+interface Category {
+  id: string;
+  name: string;
+  icon?: string;
+}
+
+interface CategoryDockProps {
+  categories: Category[];
+}
+
+const iconConfig: Record<string, { Icon: LucideIcon; color: string; bg: string }> = {
+  Laptop: { Icon: Laptop, color: '#3B82F6', bg: 'linear-gradient(135deg, #3B82F6, #1D4ED8)' },
+  BookOpen: { Icon: BookOpen, color: '#F97316', bg: 'linear-gradient(135deg, #F97316, #EA580C)' },
+  Shirt: { Icon: Shirt, color: '#EC4899', bg: 'linear-gradient(135deg, #EC4899, #DB2777)' },
+  Sofa: { Icon: Sofa, color: '#8B5CF6', bg: 'linear-gradient(135deg, #8B5CF6, #7C3AED)' },
+  Dumbbell: { Icon: Dumbbell, color: '#EF4444', bg: 'linear-gradient(135deg, #EF4444, #DC2626)' },
+  Car: { Icon: Car, color: '#10B981', bg: 'linear-gradient(135deg, #10B981, #059669)' },
+  Pencil: { Icon: Pencil, color: '#F59E0B', bg: 'linear-gradient(135deg, #F59E0B, #D97706)' },
+  Package: { Icon: Package, color: '#6366F1', bg: 'linear-gradient(135deg, #6366F1, #4F46E5)' },
+};
+
+export function CategoryDock({ categories }: CategoryDockProps) {
+  return (
+    <div className="relative w-full py-8">
+      {/* Video Background */}
+      <div className="absolute inset-0 overflow-hidden rounded-3xl">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover opacity-60"
+          src="https://assets.mixkit.co/videos/preview/mixkit-abstract-flowing-colors-4816-large.mp4"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-transparent to-background/40" />
+      </div>
+
+      {/* SVG Filter - Advanced liquid glass */}
+      <svg className="absolute w-0 h-0" aria-hidden="true">
+        <defs>
+          <filter
+            id="glass-distortion-dock"
+            x="0%"
+            y="0%"
+            width="100%"
+            height="100%"
+            filterUnits="objectBoundingBox"
+          >
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.01 0.01"
+              numOctaves="1"
+              seed="5"
+              result="turbulence"
+            />
+            <feComponentTransfer in="turbulence" result="mapped">
+              <feFuncR type="gamma" amplitude="1" exponent="10" offset="0.5" />
+              <feFuncG type="gamma" amplitude="0" exponent="1" offset="0" />
+              <feFuncB type="gamma" amplitude="0" exponent="1" offset="0.5" />
+            </feComponentTransfer>
+            <feGaussianBlur in="turbulence" stdDeviation="3" result="softMap" />
+            <feSpecularLighting
+              in="softMap"
+              surfaceScale="5"
+              specularConstant="1"
+              specularExponent="100"
+              lightingColor="white"
+              result="specLight"
+            >
+              <fePointLight x="-200" y="-200" z="300" />
+            </feSpecularLighting>
+            <feComposite
+              in="specLight"
+              operator="arithmetic"
+              k1="0"
+              k2="1"
+              k3="1"
+              k4="0"
+              result="litImage"
+            />
+            <feDisplacementMap
+              in="SourceGraphic"
+              in2="softMap"
+              scale="20"
+              xChannelSelector="R"
+              yChannelSelector="G"
+            />
+          </filter>
+        </defs>
+      </svg>
+
+      {/* Liquid Glass Dock */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.175, 0.885, 0.32, 1.275] }}
+        className="relative mx-auto max-w-fit"
+      >
+        {/* Glass wrapper */}
+        <div 
+          className="relative rounded-[2rem] p-3 overflow-hidden transition-all duration-500 hover:p-4 hover:rounded-[2.5rem]"
+          style={{
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25), 0 0 40px rgba(0, 0, 0, 0.1)',
+          }}
+        >
+          {/* Glass effect layer */}
+          <div 
+            className="absolute inset-0 z-0 backdrop-blur-md"
+            style={{ filter: 'url(#glass-distortion-dock)' }}
+          />
+
+          {/* Tint layer */}
+          <div className="absolute inset-0 z-[1] bg-white/40 dark:bg-white/10" />
+
+          {/* Shine layer */}
+          <div 
+            className="absolute inset-0 z-[2] rounded-[inherit]"
+            style={{
+              boxShadow: 'inset 2px 2px 4px 0 rgba(255, 255, 255, 0.6), inset -2px -2px 4px 0 rgba(255, 255, 255, 0.3)',
+            }}
+          />
+
+          {/* Animated shimmer */}
+          <div className="absolute inset-0 z-[3] overflow-hidden rounded-[inherit]">
+            <div 
+              className="absolute inset-0 -translate-x-full animate-[shimmer_3s_infinite]"
+              style={{
+                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+              }}
+            />
+          </div>
+
+          {/* Content - Category Icons */}
+          <div className="relative z-[4] flex items-center justify-center gap-2 sm:gap-3">
+            {categories.map((category, index) => {
+              const config = iconConfig[category.icon || 'Package'] || iconConfig.Package;
+              const IconComponent = config.Icon;
+
+              return (
+                <motion.div
+                  key={category.id}
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.4, delay: index * 0.05 }}
+                >
+                  <Link
+                    to={`/browse?category=${category.name.toLowerCase()}`}
+                    className="group flex flex-col items-center gap-1.5"
+                  >
+                    <motion.div
+                      whileHover={{ scale: 0.92 }}
+                      whileTap={{ scale: 0.88 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+                      className="relative w-14 h-14 sm:w-[70px] sm:h-[70px] rounded-2xl flex items-center justify-center cursor-pointer overflow-hidden"
+                      style={{ background: config.bg }}
+                    >
+                      {/* Icon glow */}
+                      <div 
+                        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        style={{
+                          boxShadow: `inset 0 0 20px ${config.color}`,
+                        }}
+                      />
+                      
+                      {/* Inner shine */}
+                      <div 
+                        className="absolute inset-0"
+                        style={{
+                          boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.4), inset 0 -2px 4px rgba(0,0,0,0.1)',
+                        }}
+                      />
+                      
+                      <IconComponent className="w-7 h-7 sm:w-8 sm:h-8 text-white drop-shadow-lg relative z-10" />
+                    </motion.div>
+                    
+                    <span className="text-[10px] sm:text-xs font-medium text-foreground/80 group-hover:text-foreground transition-colors max-w-[60px] truncate text-center">
+                      {category.name}
+                    </span>
+                  </Link>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}

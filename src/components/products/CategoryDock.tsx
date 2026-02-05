@@ -1,13 +1,10 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
-  Laptop, 
+  Smartphone, 
   BookOpen, 
-  Shirt, 
   Sofa, 
-  Dumbbell, 
-  Car, 
-  Pencil, 
+  Bike, 
   Package,
   LucideIcon 
 } from 'lucide-react';
@@ -23,13 +20,10 @@ interface CategoryDockProps {
 }
 
 const iconConfig: Record<string, { Icon: LucideIcon; color: string; bg: string }> = {
-  Laptop: { Icon: Laptop, color: '#3B82F6', bg: 'linear-gradient(135deg, #3B82F6, #1D4ED8)' },
+  Smartphone: { Icon: Smartphone, color: '#3B82F6', bg: 'linear-gradient(135deg, #3B82F6, #1D4ED8)' },
   BookOpen: { Icon: BookOpen, color: '#F97316', bg: 'linear-gradient(135deg, #F97316, #EA580C)' },
-  Shirt: { Icon: Shirt, color: '#EC4899', bg: 'linear-gradient(135deg, #EC4899, #DB2777)' },
   Sofa: { Icon: Sofa, color: '#8B5CF6', bg: 'linear-gradient(135deg, #8B5CF6, #7C3AED)' },
-  Dumbbell: { Icon: Dumbbell, color: '#EF4444', bg: 'linear-gradient(135deg, #EF4444, #DC2626)' },
-  Car: { Icon: Car, color: '#10B981', bg: 'linear-gradient(135deg, #10B981, #059669)' },
-  Pencil: { Icon: Pencil, color: '#F59E0B', bg: 'linear-gradient(135deg, #F59E0B, #D97706)' },
+  Bike: { Icon: Bike, color: '#10B981', bg: 'linear-gradient(135deg, #10B981, #059669)' },
   Package: { Icon: Package, color: '#6366F1', bg: 'linear-gradient(135deg, #6366F1, #4F46E5)' },
 };
 

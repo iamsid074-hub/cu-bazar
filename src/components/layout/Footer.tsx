@@ -63,7 +63,7 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 shrink-0" />
-                <span>viratass02@gmail.com</span>
+                <span>anshu123302@gmail.com</span>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 shrink-0" />
@@ -74,7 +74,7 @@ export function Footer() {
         </div>
 
         <div className="border-t border-secondary-foreground/20 mt-8 pt-8 text-center text-sm text-secondary-foreground/60">
-          <p>© 2024 CU Bazar. Created by <span className="text-primary font-semibold">ANSHU</span>. All rights reserved.</p>
+          <p>© 2026 CU Bazzar. Created by <span className="text-primary font-semibold">ANSHU</span>. All rights reserved.</p>
         </div>
       </div>
     </footer>

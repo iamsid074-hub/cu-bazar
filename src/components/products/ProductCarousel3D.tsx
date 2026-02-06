@@ -24,7 +24,6 @@ export function ProductCarousel3D() {
 
   return (
     <div className="relative w-full py-8 overflow-hidden">
-      {/* Scene container with perspective - centered */}
       <div 
         className="flex justify-center items-center"
         style={{ 
@@ -32,7 +31,6 @@ export function ProductCarousel3D() {
           minHeight: '420px',
         }}
       >
-        {/* Lateral fade mask */}
         <div
           className="absolute inset-0 pointer-events-none z-10"
           style={{
@@ -69,9 +67,7 @@ export function ProductCarousel3D() {
                   backfaceVisibility: 'hidden',
                 }}
               >
-                {/* Liquid Glass Card with Glow */}
                 <div className="relative w-full h-full rounded-2xl overflow-hidden group transition-all duration-300">
-                  {/* Glow effect behind card */}
                   <div 
                     className="absolute -inset-1 rounded-2xl opacity-60 blur-xl transition-opacity duration-300 group-hover:opacity-100"
                     style={{
@@ -79,10 +75,8 @@ export function ProductCarousel3D() {
                     }}
                   />
                   
-                  {/* Glass background */}
                   <div className="absolute inset-0 bg-card/70 backdrop-blur-xl rounded-2xl" />
                   
-                  {/* Glass shine - inner glow */}
                   <div 
                     className="absolute inset-0 rounded-2xl"
                     style={{
@@ -94,20 +88,17 @@ export function ProductCarousel3D() {
                     }}
                   />
                   
-                  {/* Image */}
                   <img
                     src={product.image}
                     alt={product.title}
                     className="relative w-full h-3/4 object-cover rounded-t-2xl"
                   />
                   
-                  {/* Info overlay */}
                   <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-card via-card/90 to-transparent">
                     <h4 className="text-sm font-semibold text-foreground truncate">{product.title}</h4>
                     <p className="text-primary font-bold text-base">₹{product.price.toLocaleString()}</p>
                   </div>
                   
-                  {/* Hover glow enhancement */}
                   <div 
                     className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl pointer-events-none"
                     style={{
@@ -125,7 +116,6 @@ export function ProductCarousel3D() {
         </motion.div>
       </div>
 
-      {/* Reduced motion fallback */}
       <style>{`
         @media (prefers-reduced-motion: reduce) {
           .scene-3d > div {

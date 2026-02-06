@@ -1,12 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* CU Bazar Design System - Campus Marketplace Vibes */
 
-
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
 
 @layer base {
   :root {
@@ -198,13 +196,17 @@
     @apply bg-gradient-to-r from-primary to-[hsl(38,92%,50%)] bg-clip-text text-transparent;
   }
 
-  /* Glass effect */
+  /* Glass effect - iOS Safari compatible */
   .glass {
-    @apply backdrop-blur-xl bg-card/80 border border-border/50;
+    @apply bg-card/80 border border-border/50;
+    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px);
   }
 
   .glass-strong {
-    @apply backdrop-blur-2xl bg-card/90 border border-border/60;
+    @apply bg-card/90 border border-border/60;
+    -webkit-backdrop-filter: blur(40px);
+    backdrop-filter: blur(40px);
   }
 
   /* Card hover effects */

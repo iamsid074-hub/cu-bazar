@@ -4,20 +4,33 @@ const VideoBackground = memo(function VideoBackground() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    // Manually set the video source to avoid React DOM issues
-    if (videoRef.current) {
-      videoRef.current.src = '/videos/hero-bg.mp4';
-      videoRef.current.load();
-      videoRef.current.play().catch(() => {
-        // Autoplay might fail on some browsers, that's okay
+    const video = videoRef.current;
+    if (!video) return;
+
+    // iOS requires these attributes set via JS for autoplay
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+    video.muted = true;
+    video.src = '/videos/hero-bg.mp4';
+    video.load();
+    
+    // iOS needs user interaction or proper setup for autoplay
+    const playVideo = () => {
+      video.play().catch(() => {
+        // Autoplay blocked, that's okay
       });
-    }
+    };
+    
+    playVideo();
+    
+    // Retry play on visibility change (iOS sometimes blocks until visible)
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) playVideo();
+    });
     
     return () => {
-      if (videoRef.current) {
-        videoRef.current.pause();
-        videoRef.current.src = '';
-      }
+      video.pause();
+      video.src = '';
     };
   }, []);
 
@@ -25,10 +38,14 @@ const VideoBackground = memo(function VideoBackground() {
     <div className="absolute inset-0 w-full h-full overflow-hidden">
       <video
         ref={videoRef}
+        autoPlay
         loop
         muted
         playsInline
+        // @ts-ignore - webkit-playsinline is for iOS Safari
+        webkit-playsinline="true"
         className="w-full h-full object-cover"
+        style={{ objectFit: 'cover' }}
       />
     </div>
   );

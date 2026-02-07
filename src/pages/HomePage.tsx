@@ -1,18 +1,29 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles, Shield, Users, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/products/ProductCard';
 import { CategoryDock } from '@/components/products/CategoryDock';
+import { ProductCarousel3D } from '@/components/products/ProductCarousel3D';
 import { VideoBackground } from '@/components/layout/VideoBackground';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function HomePage() {
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [categories, setCategories] = useState<any[]>([]);
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
   const [recentProducts, setRecentProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Redirect logged-in users to browse page
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate('/browse', { replace: true });
+    }
+  }, [user, authLoading, navigate]);
 
   useEffect(() => {
     async function fetchData() {
@@ -41,6 +52,20 @@ export default function HomePage() {
     { icon: Shield, label: 'Secure Transactions', value: '100%' },
     { icon: Zap, label: 'Quick Sales', value: '24hrs' },
   ];
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  // Don't render landing page if user is logged in (they'll be redirected)
+  if (user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen">
@@ -76,12 +101,12 @@ export default function HomePage() {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" asChild className="cu-gradient border-0 text-lg px-8 animate-pulse-glow">
-                <Link to="/browse">
-                  Start Shopping <ArrowRight className="ml-2 h-5 w-5" />
+                <Link to="/auth?mode=signup">
+                  Get Started <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild className="text-lg px-8">
-                <Link to="/sell">Sell Your Stuff</Link>
+                <Link to="/auth">Sign In</Link>
               </Button>
             </div>
           </motion.div>
@@ -102,7 +127,7 @@ export default function HomePage() {
       {/* Stats Section */}
       <section className="py-12 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-3 gap-8">
+          <div className="grid grid-cols-3 gap-4 md:gap-8">
             {stats.map((stat, index) => (
               <motion.div
                 key={stat.label}
@@ -111,9 +136,9 @@ export default function HomePage() {
                 transition={{ delay: index * 0.1 }}
                 className="text-center"
               >
-                <stat.icon className="h-8 w-8 text-primary mx-auto mb-2" />
-                <div className="font-display text-3xl font-bold text-foreground">{stat.value}</div>
-                <div className="text-sm text-muted-foreground">{stat.label}</div>
+                <stat.icon className="h-6 w-6 md:h-8 md:w-8 text-primary mx-auto mb-2" />
+                <div className="font-display text-xl md:text-3xl font-bold text-foreground">{stat.value}</div>
+                <div className="text-xs md:text-sm text-muted-foreground">{stat.label}</div>
               </motion.div>
             ))}
           </div>
@@ -121,19 +146,31 @@ export default function HomePage() {
       </section>
 
       {/* Categories Section */}
-      <section className="py-16">
+      <section className="py-16 pt-24 md:pt-16">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
             <div>
               <h2 className="font-display text-3xl font-bold text-foreground">Browse Categories</h2>
               <p className="text-muted-foreground mt-1">Find exactly what you need</p>
             </div>
-            <Button variant="ghost" asChild>
-              <Link to="/browse">View All <ArrowRight className="ml-2 h-4 w-4" /></Link>
+            <Button variant="glass" asChild>
+              <Link to="/auth">View All <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
           </div>
           
           <CategoryDock categories={categories} />
+        </div>
+      </section>
+
+      {/* 3D Product Carousel */}
+      <section className="py-16 bg-muted/20 overflow-hidden">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-8">
+            <h2 className="font-display text-3xl font-bold text-foreground">Trending Items</h2>
+            <p className="text-muted-foreground mt-1">Hot picks from campus</p>
+          </div>
+          
+          <ProductCarousel3D />
         </div>
       </section>
 
@@ -146,8 +183,8 @@ export default function HomePage() {
                 <h2 className="font-display text-3xl font-bold text-foreground">Featured Deals</h2>
                 <p className="text-muted-foreground mt-1">Hand-picked by our team</p>
               </div>
-              <Button variant="ghost" asChild>
-                <Link to="/browse?featured=true">View All <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              <Button variant="glass" asChild>
+                <Link to="/auth">View All <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
             </div>
             
@@ -168,8 +205,8 @@ export default function HomePage() {
               <h2 className="font-display text-3xl font-bold text-foreground">Recently Added</h2>
               <p className="text-muted-foreground mt-1">Fresh listings just for you</p>
             </div>
-            <Button variant="ghost" asChild>
-              <Link to="/browse">View All <ArrowRight className="ml-2 h-4 w-4" /></Link>
+            <Button variant="glass" asChild>
+              <Link to="/auth">View All <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
           </div>
           
@@ -183,7 +220,7 @@ export default function HomePage() {
             <div className="text-center py-16 bg-muted/30 rounded-2xl">
               <p className="text-muted-foreground mb-4">No products listed yet. Be the first!</p>
               <Button asChild>
-                <Link to="/sell">List Your First Item</Link>
+                <Link to="/auth?mode=signup">Join to List Items</Link>
               </Button>
             </div>
           )}
@@ -204,8 +241,8 @@ export default function HomePage() {
             <p className="text-primary-foreground/80 text-lg mb-8 max-w-xl mx-auto">
               Turn your unused items into cash. List your products in minutes and reach thousands of students.
             </p>
-            <Button size="lg" variant="secondary" asChild className="text-lg px-8">
-              <Link to="/sell">Start Selling Now</Link>
+            <Button size="lg" variant="glass" asChild className="text-lg px-8 bg-white/20 hover:bg-white/30">
+              <Link to="/auth?mode=signup">Start Selling Now</Link>
             </Button>
           </motion.div>
         </div>

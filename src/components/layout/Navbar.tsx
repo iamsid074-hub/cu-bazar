@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -8,9 +8,6 @@ import {
   X, 
   Search, 
   Plus,
-  Sun,
-  Moon,
-  Monitor,
   LogOut,
   Crown,
   HelpCircle
@@ -32,12 +29,14 @@ import { LiquidGlassToggle } from '@/components/ui/liquid-glass-toggle';
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [scrolled, setScrolled] = useState(false);
   const { user, signOut } = useAuth();
   const { totalItems } = useCart();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -47,10 +46,29 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    if (mobileSearchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [mobileSearchOpen]);
+
+  // Close search when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (mobileSearchOpen && !(e.target as Element).closest('.mobile-search-container')) {
+        setMobileSearchOpen(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [mobileSearchOpen]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/browse?search=${encodeURIComponent(searchQuery)}`);
+      setMobileSearchOpen(false);
+      setSearchQuery('');
     }
   };
 
@@ -71,18 +89,54 @@ export function Navbar() {
       transition={{ duration: 0.4, ease: 'easeOut' }}
     >
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        {/* Mobile Search Overlay */}
+        <AnimatePresence>
+          {mobileSearchOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mobile-search-container absolute top-0 left-0 right-0 p-3 bg-background/95 backdrop-blur-2xl md:hidden z-50"
+            >
+              <form onSubmit={handleSearch} className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    ref={searchInputRef}
+                    type="search"
+                    placeholder="Search products..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 bg-muted/50 h-10"
+                  />
+                </div>
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-10 w-10"
+                  onClick={() => setMobileSearchOpen(false)}
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </form>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Main Navbar - Compact on Mobile */}
+        <div className="flex items-center justify-between h-12 md:h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl cu-gradient flex items-center justify-center">
-              <span className="text-primary-foreground font-display font-bold text-lg">CU</span>
+          <Link to={user ? "/browse" : "/"} className="flex items-center gap-2">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl cu-gradient flex items-center justify-center">
+              <span className="text-primary-foreground font-display font-bold text-sm md:text-lg">CU</span>
             </div>
-            <span className="font-display font-bold text-xl hidden sm:block">
+            <span className="font-display font-bold text-lg hidden sm:block">
               <span className="cu-gradient-text">CU Bazar</span>
             </span>
           </Link>
 
-          {/* Search Bar - Desktop */}
+          {/* Search Bar - Desktop Only */}
           <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-8">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -155,30 +209,45 @@ export function Navbar() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </Button>
-        </div>
+          {/* Mobile Navigation Icons */}
+          <div className="flex md:hidden items-center gap-1">
+            {/* Search Icon */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9"
+              onClick={(e) => {
+                e.stopPropagation();
+                setMobileSearchOpen(!mobileSearchOpen);
+              }}
+            >
+              <Search className="h-5 w-5" />
+            </Button>
 
-        {/* Mobile Search */}
-        <form onSubmit={handleSearch} className="md:hidden pb-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-muted/50"
-            />
+            {user && (
+              <Button variant="ghost" size="icon" asChild className="relative h-9 w-9">
+                <Link to="/cart">
+                  <ShoppingCart className="h-5 w-5" />
+                  {totalItems > 0 && (
+                    <Badge className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-[10px]">
+                      {totalItems}
+                    </Badge>
+                  )}
+                </Link>
+              </Button>
+            )}
+
+            {/* Menu Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
           </div>
-        </form>
+        </div>
       </div>
 
       {/* Mobile Menu */}
@@ -188,47 +257,47 @@ export function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden border-t border-border/10 bg-background/70 backdrop-blur-2xl"
+            className="md:hidden border-t border-border/10 bg-background/95 backdrop-blur-2xl"
           >
-            <div className="container mx-auto px-4 py-4 space-y-2">
-              <Link to="/browse" onClick={() => setMobileMenuOpen(false)} className="block py-2 px-4 rounded-lg hover:bg-muted">
+            <div className="container mx-auto px-4 py-3 space-y-1">
+              <Link to="/browse" onClick={() => setMobileMenuOpen(false)} className="block py-2 px-3 rounded-lg hover:bg-muted text-sm">
                 Browse
               </Link>
               {user ? (
                 <>
-                  <Link to="/sell" onClick={() => setMobileMenuOpen(false)} className="block py-2 px-4 rounded-lg hover:bg-muted">
+                  <Link to="/sell" onClick={() => setMobileMenuOpen(false)} className="block py-2 px-3 rounded-lg hover:bg-muted text-sm">
                     Sell Item
                   </Link>
-                  <Link to="/cart" onClick={() => setMobileMenuOpen(false)} className="block py-2 px-4 rounded-lg hover:bg-muted">
+                  <Link to="/cart" onClick={() => setMobileMenuOpen(false)} className="block py-2 px-3 rounded-lg hover:bg-muted text-sm">
                     Cart ({totalItems})
                   </Link>
-                  <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="block py-2 px-4 rounded-lg hover:bg-muted">
+                  <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="block py-2 px-3 rounded-lg hover:bg-muted text-sm">
                     Profile
                   </Link>
-                  <Link to="/premium" onClick={() => setMobileMenuOpen(false)} className="block py-2 px-4 rounded-lg hover:bg-muted">
+                  <Link to="/premium" onClick={() => setMobileMenuOpen(false)} className="block py-2 px-3 rounded-lg hover:bg-muted text-sm">
                     Premium
                   </Link>
-                  <Link to="/help" onClick={() => setMobileMenuOpen(false)} className="block py-2 px-4 rounded-lg hover:bg-muted">
+                  <Link to="/help" onClick={() => setMobileMenuOpen(false)} className="block py-2 px-3 rounded-lg hover:bg-muted text-sm">
                     Help
                   </Link>
-                  <button onClick={() => { signOut(); setMobileMenuOpen(false); }} className="block w-full text-left py-2 px-4 rounded-lg hover:bg-muted text-destructive">
+                  <button onClick={() => { signOut(); setMobileMenuOpen(false); }} className="block w-full text-left py-2 px-3 rounded-lg hover:bg-muted text-destructive text-sm">
                     Sign Out
                   </button>
                 </>
               ) : (
                 <>
-                  <Link to="/auth" onClick={() => setMobileMenuOpen(false)} className="block py-2 px-4 rounded-lg hover:bg-muted">
+                  <Link to="/auth" onClick={() => setMobileMenuOpen(false)} className="block py-2 px-3 rounded-lg hover:bg-muted text-sm">
                     Sign In
                   </Link>
-                  <Link to="/auth?mode=signup" onClick={() => setMobileMenuOpen(false)} className="block py-2 px-4 rounded-lg cu-gradient text-primary-foreground">
+                  <Link to="/auth?mode=signup" onClick={() => setMobileMenuOpen(false)} className="block py-2 px-3 rounded-lg cu-gradient text-primary-foreground text-sm">
                     Join Now
                   </Link>
                 </>
               )}
               
-              <div className="border-t border-border/50 pt-4 mt-2">
-                <p className="text-sm text-muted-foreground px-4 mb-3">Theme</p>
-                <div className="px-4">
+              <div className="border-t border-border/50 pt-3 mt-2">
+                <p className="text-xs text-muted-foreground px-3 mb-2">Theme</p>
+                <div className="px-3">
                   <LiquidGlassToggle />
                 </div>
               </div>

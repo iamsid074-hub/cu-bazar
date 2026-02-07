@@ -13,6 +13,7 @@ interface CartItem {
     price: number;
     images: string[];
     seller_id: string;
+    status?: string;
   };
 }
 
@@ -53,7 +54,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             title,
             price,
             images,
-            seller_id
+            seller_id,
+            status
           )
         `)
         .eq('user_id', user.id);
@@ -78,6 +80,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
+      // First check if the product is available and not owned by user
+      const { data: product, error: productError } = await supabase
+        .from('products')
+        .select('seller_id, status, title')
+        .eq('id', productId)
+        .single();
+
+      if (productError) throw productError;
+
+      // Check if user is trying to add their own product
+      if (product.seller_id === user.id) {
+        toast.error('You cannot purchase your own items');
+        return;
+      }
+
+      // Check if product is sold out
+      if (product.status === 'sold') {
+        toast.error('This item is no longer available');
+        return;
+      }
+
       const { error } = await supabase
         .from('cart_items')
         .upsert({
@@ -148,7 +171,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
       setItems([]);
-      toast.success('Cart cleared');
     } catch (error) {
       console.error('Error clearing cart:', error);
       toast.error('Failed to clear cart');

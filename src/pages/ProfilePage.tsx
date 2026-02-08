@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, Package, Settings, LogOut, Camera, Loader2, Trash2, ShoppingBag, Clock, CheckCircle, Truck, XCircle } from 'lucide-react';
+import { User, Package, Settings, LogOut, Camera, Loader2, Trash2, ShoppingBag, Clock, CheckCircle, Truck, XCircle, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { ProductCard } from '@/components/products/ProductCard';
 
 export default function ProfilePage() {
   const { user, signOut } = useAuth();
@@ -21,6 +22,7 @@ export default function ProfilePage() {
   const [listings, setListings] = useState<any[]>([]);
   const [buyerOrders, setBuyerOrders] = useState<any[]>([]);
   const [sellerOrders, setSellerOrders] = useState<any[]>([]);
+  const [favorites, setFavorites] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) {
@@ -30,17 +32,19 @@ export default function ProfilePage() {
 
     async function fetchData() {
       try {
-        const [profileRes, listingsRes, buyerOrdersRes, sellerOrdersRes] = await Promise.all([
+        const [profileRes, listingsRes, buyerOrdersRes, sellerOrdersRes, wishlistRes] = await Promise.all([
           supabase.from('profiles').select('*').eq('user_id', user.id).single(),
           supabase.from('products').select('*').eq('seller_id', user.id).order('created_at', { ascending: false }),
           supabase.from('orders').select('*, product:products(id, title, images, seller_id), seller:profiles!orders_seller_id_fkey(full_name)').eq('buyer_id', user.id).order('created_at', { ascending: false }),
-          supabase.from('orders').select('*, product:products(id, title, images), buyer:profiles!orders_buyer_id_fkey(full_name)').eq('seller_id', user.id).order('created_at', { ascending: false })
+          supabase.from('orders').select('*, product:products(id, title, images), buyer:profiles!orders_buyer_id_fkey(full_name)').eq('seller_id', user.id).order('created_at', { ascending: false }),
+          supabase.from('wishlist').select('*, product:products(*)').eq('user_id', user.id).order('created_at', { ascending: false })
         ]);
 
         if (profileRes.data) setProfile(profileRes.data);
         if (listingsRes.data) setListings(listingsRes.data);
         if (buyerOrdersRes.data) setBuyerOrders(buyerOrdersRes.data as any[]);
         if (sellerOrdersRes.data) setSellerOrders(sellerOrdersRes.data as any[]);
+        if (wishlistRes.data) setFavorites(wishlistRes.data.map((w: any) => w.product).filter(Boolean));
       } catch (error) {
         console.error('Error fetching profile:', error);
       } finally {
@@ -207,6 +211,10 @@ export default function ProfilePage() {
                 <ShoppingBag className="h-3 w-3 md:h-4 md:w-4" />
                 My Orders ({buyerOrders.length})
               </TabsTrigger>
+              <TabsTrigger value="favorites" className="gap-1 md:gap-2 text-xs md:text-sm">
+                <Heart className="h-3 w-3 md:h-4 md:w-4" />
+                Favorites ({favorites.length})
+              </TabsTrigger>
               <TabsTrigger value="listings" className="gap-1 md:gap-2 text-xs md:text-sm">
                 <Package className="h-3 w-3 md:h-4 md:w-4" />
                 Listings ({listings.length})
@@ -274,6 +282,23 @@ export default function ProfilePage() {
                   <ShoppingBag className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/30 mx-auto mb-4" />
                   <p className="text-muted-foreground mb-4 text-sm md:text-base">No orders yet.</p>
                   <Button onClick={() => navigate('/browse')}>Start Shopping</Button>
+                </div>
+              )}
+            </TabsContent>
+
+            {/* Favorites Tab */}
+            <TabsContent value="favorites">
+              {favorites.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
+                  {favorites.map((product, index) => (
+                    <ProductCard key={product.id} product={product} index={index} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 md:py-16 bg-muted/30 rounded-2xl">
+                  <Heart className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/30 mx-auto mb-4" />
+                  <p className="text-muted-foreground mb-4 text-sm md:text-base">No favorites yet.</p>
+                  <Button onClick={() => navigate('/browse')}>Explore Products</Button>
                 </div>
               )}
             </TabsContent>

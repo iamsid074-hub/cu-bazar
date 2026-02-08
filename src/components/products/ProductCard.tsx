@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Heart, ShoppingCart, MapPin, Eye } from 'lucide-react';
+import { ShoppingCart, MapPin, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { FavoriteButton } from '@/components/products/FavoriteButton';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWishlist } from '@/hooks/useWishlist';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -27,17 +29,18 @@ interface ProductCardProps {
 export function ProductCard({ product, index = 0 }: ProductCardProps) {
   const { addToCart } = useCart();
   const { user } = useAuth();
+  const { isWishlisted, toggleWishlist, loading: wishlistLoading } = useWishlist();
   const imageUrl = product.images?.[0] || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400';
 
   const isSoldOut = product.status === 'sold';
   const isOwnItem = user?.id === product.seller_id;
 
   const conditionColors: Record<string, string> = {
-    new: 'bg-cu-success text-white',
-    like_new: 'bg-cu-amber text-white',
-    good: 'bg-primary text-primary-foreground',
+    new: 'bg-green-500/20 text-green-600 border-green-500/30',
+    like_new: 'bg-amber-500/20 text-amber-600 border-amber-500/30',
+    good: 'bg-primary/20 text-primary border-primary/30',
     fair: 'bg-muted text-muted-foreground',
-    poor: 'bg-destructive text-destructive-foreground'
+    poor: 'bg-destructive/20 text-destructive border-destructive/30'
   };
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -60,6 +63,10 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
     }
     
     addToCart(product.id);
+  };
+
+  const handleToggleWishlist = () => {
+    toggleWishlist(product.id);
   };
 
   return (
@@ -101,18 +108,18 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
         </div>
       )}
 
-      {/* Wishlist Button */}
+      {/* Wishlist Button - Always visible */}
       {!isSoldOut && (
-        <button 
-          className="absolute top-2 right-2 md:top-3 md:right-3 z-10 p-1.5 md:p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300"
-          style={{
-            background: 'rgba(255,255,255,0.15)',
-            backdropFilter: 'blur(10px)',
-            boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), 0 2px 8px rgba(0,0,0,0.15)',
-          }}
-        >
-          <Heart className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground hover:text-destructive transition-colors" />
-        </button>
+        <div className="absolute top-2 right-2 md:top-3 md:right-3 z-10">
+          <FavoriteButton
+            isWishlisted={isWishlisted(product.id)}
+            onClick={handleToggleWishlist}
+            loading={wishlistLoading}
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 md:h-8 md:w-8 bg-background/60 backdrop-blur-sm hover:bg-background/80"
+          />
+        </div>
       )}
 
       {/* Image */}

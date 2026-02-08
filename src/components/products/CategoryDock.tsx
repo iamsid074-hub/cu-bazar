@@ -29,9 +29,9 @@ const iconConfig: Record<string, { Icon: LucideIcon; color: string; bg: string }
 
 export function CategoryDock({ categories }: CategoryDockProps) {
   return (
-    <div className="relative w-full py-8">
+    <div className="relative w-full py-6 md:py-8">
       {/* Video Background */}
-      <div className="absolute inset-0 overflow-hidden rounded-3xl">
+      <div className="absolute inset-0 overflow-hidden rounded-2xl md:rounded-3xl">
         <video
           autoPlay
           loop
@@ -97,16 +97,16 @@ export function CategoryDock({ categories }: CategoryDockProps) {
         </defs>
       </svg>
 
-      {/* Liquid Glass Dock */}
+      {/* Horizontally Scrollable Category Dock */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.175, 0.885, 0.32, 1.275] }}
-        className="relative mx-auto max-w-fit"
+        className="relative px-2 md:mx-auto md:max-w-fit"
       >
         {/* Glass wrapper */}
         <div 
-          className="relative rounded-[2rem] p-3 overflow-hidden transition-all duration-500 hover:p-4 hover:rounded-[2.5rem]"
+          className="relative rounded-2xl md:rounded-[2rem] p-2 md:p-3 overflow-hidden transition-all duration-500 hover:md:p-4 hover:md:rounded-[2.5rem]"
           style={{
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25), 0 0 40px rgba(0, 0, 0, 0.1)',
           }}
@@ -138,8 +138,14 @@ export function CategoryDock({ categories }: CategoryDockProps) {
             />
           </div>
 
-          {/* Content - Category Icons */}
-          <div className="relative z-[4] flex items-center justify-center gap-2 sm:gap-3">
+          {/* Content - Horizontally Scrollable Category Icons */}
+          <div 
+            className="relative z-[4] flex items-center gap-2 sm:gap-3 overflow-x-auto scrollbar-hide px-1 py-1"
+            style={{ 
+              WebkitOverflowScrolling: 'touch',
+              scrollSnapType: 'x mandatory'
+            }}
+          >
             {categories.map((category, index) => {
               const config = iconConfig[category.icon || 'Package'] || iconConfig.Package;
               const IconComponent = config.Icon;
@@ -150,16 +156,18 @@ export function CategoryDock({ categories }: CategoryDockProps) {
                   initial={{ opacity: 0, scale: 0.5 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.4, delay: index * 0.05 }}
+                  style={{ scrollSnapAlign: 'start' }}
+                  className="flex-shrink-0"
                 >
                   <Link
                     to={`/browse?category=${category.name.toLowerCase()}`}
-                    className="group flex flex-col items-center gap-1.5"
+                    className="group flex flex-col items-center gap-1 md:gap-1.5"
                   >
                     <motion.div
                       whileHover={{ scale: 0.92 }}
                       whileTap={{ scale: 0.88 }}
                       transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-                      className="relative w-14 h-14 sm:w-[70px] sm:h-[70px] rounded-2xl flex items-center justify-center cursor-pointer overflow-hidden"
+                      className="relative w-12 h-12 sm:w-14 sm:h-14 md:w-[70px] md:h-[70px] rounded-xl md:rounded-2xl flex items-center justify-center cursor-pointer overflow-hidden"
                       style={{ background: config.bg }}
                     >
                       {/* Icon glow */}
@@ -178,10 +186,10 @@ export function CategoryDock({ categories }: CategoryDockProps) {
                         }}
                       />
                       
-                      <IconComponent className="w-7 h-7 sm:w-8 sm:h-8 text-white drop-shadow-lg relative z-10" />
+                      <IconComponent className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white drop-shadow-lg relative z-10" />
                     </motion.div>
                     
-                    <span className="text-[10px] sm:text-xs font-medium text-foreground/80 group-hover:text-foreground transition-colors max-w-[60px] truncate text-center">
+                    <span className="text-[9px] sm:text-[10px] md:text-xs font-medium text-foreground/80 group-hover:text-foreground transition-colors max-w-[50px] md:max-w-[60px] truncate text-center">
                       {category.name}
                     </span>
                   </Link>

@@ -9,20 +9,36 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+
 import { ProductCard } from '@/components/products/ProductCard';
+
+type Profile = Tables<'profiles'>;
+type Product = Tables<'products'>;
+type Order = Tables<'orders'>;
+
+interface OrderWithDetails extends Order {
+  product: Pick<Product, 'id' | 'title' | 'images' | 'seller_id'> | null;
+  seller: { full_name: string | null } | null;
+}
+
+interface SaleOrder extends Order {
+  product: Pick<Product, 'id' | 'title' | 'images'> | null;
+  buyer: { full_name: string | null } | null;
+}
 
 export default function ProfilePage() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [profile, setProfile] = useState<any>(null);
-  const [listings, setListings] = useState<any[]>([]);
-  const [buyerOrders, setBuyerOrders] = useState<any[]>([]);
-  const [sellerOrders, setSellerOrders] = useState<any[]>([]);
-  const [favorites, setFavorites] = useState<any[]>([]);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [listings, setListings] = useState<Product[]>([]);
+  const [buyerOrders, setBuyerOrders] = useState<OrderWithDetails[]>([]);
+  const [sellerOrders, setSellerOrders] = useState<SaleOrder[]>([]);
+  const [favorites, setFavorites] = useState<Product[]>([]);
 
   useEffect(() => {
     if (!user) {
@@ -42,9 +58,14 @@ export default function ProfilePage() {
 
         if (profileRes.data) setProfile(profileRes.data);
         if (listingsRes.data) setListings(listingsRes.data);
-        if (buyerOrdersRes.data) setBuyerOrders(buyerOrdersRes.data as any[]);
-        if (sellerOrdersRes.data) setSellerOrders(sellerOrdersRes.data as any[]);
-        if (wishlistRes.data) setFavorites(wishlistRes.data.map((w: any) => w.product).filter(Boolean));
+        if (buyerOrdersRes.data) setBuyerOrders(buyerOrdersRes.data as unknown as OrderWithDetails[]);
+        if (sellerOrdersRes.data) setSellerOrders(sellerOrdersRes.data as unknown as SaleOrder[]);
+        if (wishlistRes.data) {
+          const products = wishlistRes.data
+            .map((w) => w.product)
+            .filter((p): p is Product => p !== null);
+          setFavorites(products);
+        }
       } catch (error) {
         console.error('Error fetching profile:', error);
       } finally {
@@ -72,8 +93,8 @@ export default function ProfilePage() {
 
       if (error) throw error;
       toast.success('Profile updated!');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to update profile');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update profile');
     } finally {
       setSaving(false);
     }
@@ -81,7 +102,7 @@ export default function ProfilePage() {
 
   const handleDeleteListing = async (productId: string) => {
     if (!confirm('Are you sure you want to delete this listing?')) return;
-    
+
     try {
       const { error } = await supabase
         .from('products')
@@ -90,17 +111,17 @@ export default function ProfilePage() {
         .eq('seller_id', user?.id);
 
       if (error) throw error;
-      
+
       setListings(listings.filter(l => l.id !== productId));
       toast.success('Listing deleted successfully');
-    } catch (error: any) {
+    } catch (error) {
       toast.error('Failed to delete listing');
     }
   };
 
   const handleCancelOrder = async (orderId: string, productId: string) => {
     if (!confirm('Are you sure you want to cancel this order?')) return;
-    
+
     try {
       // Update order status to cancelled
       const { error: orderError } = await supabase
@@ -124,11 +145,11 @@ export default function ProfilePage() {
         .select('*, product:products(id, title, images, seller_id), seller:profiles!orders_seller_id_fkey(full_name)')
         .eq('buyer_id', user?.id)
         .order('created_at', { ascending: false });
-      
-      if (data) setBuyerOrders(data as any[]);
-      
+
+      if (data) setBuyerOrders(data as unknown as OrderWithDetails[]);
+
       toast.success('Order cancelled successfully');
-    } catch (error: any) {
+    } catch (error) {
       toast.error('Failed to cancel order');
     }
   };
@@ -186,7 +207,7 @@ export default function ProfilePage() {
                 <Camera className="h-3 w-3 md:h-4 md:w-4" />
               </button>
             </div>
-            
+
             <div className="flex-1">
               <div className="flex items-center gap-2 md:gap-3 mb-1">
                 <h1 className="font-display text-lg md:text-2xl font-bold">{profile?.full_name || 'CU Student'}</h1>
@@ -264,8 +285,8 @@ export default function ProfilePage() {
                           </div>
                         </div>
                         {order.status === 'pending' && (
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="ghost"
                             size="sm"
                             className="text-destructive hover:text-destructive self-start"
                             onClick={() => handleCancelOrder(order.id, order.product?.id)}
@@ -321,8 +342,8 @@ export default function ProfilePage() {
                           <Link to={`/product/${product.id}`} className="font-medium text-sm md:text-base hover:text-primary line-clamp-1">
                             {product.title}
                           </Link>
-                          <Badge 
-                            variant="outline" 
+                          <Badge
+                            variant="outline"
                             className={`text-xs shrink-0 ${product.status === 'sold' ? 'bg-destructive/10 text-destructive' : 'bg-green-500/10 text-green-600'}`}
                           >
                             {product.status === 'sold' ? 'Sold' : 'Active'}
@@ -331,9 +352,9 @@ export default function ProfilePage() {
                         <p className="font-display font-bold text-primary text-sm md:text-base mb-3">
                           ₹{product.price?.toLocaleString()}
                         </p>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
                           onClick={() => handleDeleteListing(product.id)}
                         >
@@ -405,7 +426,7 @@ export default function ProfilePage() {
                   <Input
                     id="name"
                     value={profile?.full_name || ''}
-                    onChange={(e) => setProfile((prev: any) => ({ ...prev, full_name: e.target.value }))}
+                    onChange={(e) => setProfile((prev) => prev ? { ...prev, full_name: e.target.value } : null)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -414,7 +435,7 @@ export default function ProfilePage() {
                     id="phone"
                     type="tel"
                     value={profile?.phone || ''}
-                    onChange={(e) => setProfile((prev: any) => ({ ...prev, phone: e.target.value }))}
+                    onChange={(e) => setProfile((prev) => prev ? { ...prev, phone: e.target.value } : null)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -422,7 +443,7 @@ export default function ProfilePage() {
                   <Input
                     id="college"
                     value={profile?.college_name || ''}
-                    onChange={(e) => setProfile((prev: any) => ({ ...prev, college_name: e.target.value }))}
+                    onChange={(e) => setProfile((prev) => prev ? { ...prev, college_name: e.target.value } : null)}
                   />
                 </div>
                 <Button type="submit" disabled={saving}>

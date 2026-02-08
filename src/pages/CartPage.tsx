@@ -41,7 +41,9 @@ export default function CartPage() {
             amount: item.product.price * item.quantity,
             payment_method: paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online',
             status: 'pending'
-          });
+          })
+          .select('id')
+          .single();
 
         if (orderError) throw orderError;
 
@@ -52,15 +54,18 @@ export default function CartPage() {
           .eq('id', item.product_id);
 
         if (productError) throw productError;
+
+        return orderData.id;
       });
 
-      await Promise.all(orderPromises);
-      
+      const orderIds = await Promise.all(orderPromises);
+      const validOrderIds = orderIds.filter(id => id !== undefined);
+
       const orderTotal = totalPrice;
       await clearCart();
-      
+
       toast.success('Order placed successfully!');
-      navigate(`/order-confirmation?total=${orderTotal}`);
+      navigate(`/order-confirmation?total=${orderTotal}&ids=${validOrderIds.join(',')}`);
     } catch (error: any) {
       console.error('Checkout error:', error);
       toast.error('Failed to place order. Please try again.');
@@ -158,7 +163,7 @@ export default function CartPage() {
                         </div>
                       )}
                     </div>
-                    
+
                     <div className="flex-1 min-w-0">
                       <Link to={`/product/${item.product_id}`} className="font-semibold text-foreground hover:text-primary line-clamp-1 text-sm md:text-base">
                         {item.product?.title}
@@ -175,7 +180,7 @@ export default function CartPage() {
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
-                      
+
                       {!isSold && (
                         <div className="flex items-center gap-1 md:gap-2">
                           <Button
@@ -216,20 +221,18 @@ export default function CartPage() {
                     <CreditCard className="h-4 w-4 md:h-5 md:w-5 text-primary" />
                     Payment Method
                   </h3>
-                  
+
                   <div className="space-y-2 md:space-y-3">
                     {/* Cash on Delivery */}
                     <button
                       onClick={() => setPaymentMethod('cod')}
-                      className={`w-full p-3 md:p-4 rounded-xl border-2 transition-all flex items-center gap-3 md:gap-4 ${
-                        paymentMethod === 'cod'
+                      className={`w-full p-3 md:p-4 rounded-xl border-2 transition-all flex items-center gap-3 md:gap-4 ${paymentMethod === 'cod'
                           ? 'border-primary bg-primary/5'
                           : 'border-border/50 hover:border-primary/50'
-                      }`}
+                        }`}
                     >
-                      <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center ${
-                        paymentMethod === 'cod' ? 'bg-primary text-primary-foreground' : 'bg-muted'
-                      }`}>
+                      <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center ${paymentMethod === 'cod' ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                        }`}>
                         <Banknote className="h-5 w-5 md:h-6 md:w-6" />
                       </div>
                       <div className="flex-1 text-left">
@@ -244,15 +247,13 @@ export default function CartPage() {
                     {/* Online Payment */}
                     <button
                       onClick={() => setPaymentMethod('online')}
-                      className={`w-full p-3 md:p-4 rounded-xl border-2 transition-all flex items-center gap-3 md:gap-4 ${
-                        paymentMethod === 'online'
+                      className={`w-full p-3 md:p-4 rounded-xl border-2 transition-all flex items-center gap-3 md:gap-4 ${paymentMethod === 'online'
                           ? 'border-primary bg-primary/5'
                           : 'border-border/50 hover:border-primary/50'
-                      }`}
+                        }`}
                     >
-                      <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center ${
-                        paymentMethod === 'online' ? 'bg-primary text-primary-foreground' : 'bg-muted'
-                      }`}>
+                      <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center ${paymentMethod === 'online' ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                        }`}>
                         <CreditCard className="h-5 w-5 md:h-6 md:w-6" />
                       </div>
                       <div className="flex-1 text-left">
@@ -269,7 +270,7 @@ export default function CartPage() {
                 {/* Price Summary */}
                 <div className="p-4 md:p-5 bg-card rounded-xl border border-border/50">
                   <h3 className="font-display font-bold text-base md:text-lg mb-3 md:mb-4">Order Summary</h3>
-                  
+
                   <div className="space-y-2 md:space-y-3 pb-3 md:pb-4 border-b border-border/50 text-sm md:text-base">
                     <div className="flex justify-between text-muted-foreground">
                       <span>Subtotal</span>
@@ -286,14 +287,14 @@ export default function CartPage() {
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="flex justify-between font-display font-bold text-lg md:text-xl mt-3 md:mt-4 mb-4 md:mb-6">
                     <span>Total</span>
                     <span className="text-primary">₹{totalPrice.toLocaleString()}</span>
                   </div>
 
-                  <Button 
-                    className="w-full cu-gradient border-0" 
+                  <Button
+                    className="w-full cu-gradient border-0"
                     size="lg"
                     onClick={handleCheckout}
                     disabled={processing || soldItems.length > 0 || availableItems.length === 0}
@@ -309,7 +310,7 @@ export default function CartPage() {
                   </Button>
 
                   <p className="text-xs text-muted-foreground text-center mt-3 md:mt-4">
-                    {paymentMethod === 'cod' 
+                    {paymentMethod === 'cod'
                       ? 'Pay cash when your order arrives'
                       : 'Secure payments powered by Razorpay'
                     }

@@ -61,7 +61,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         .eq('user_id', user.id);
 
       if (error) throw error;
-      setItems((data as unknown as CartItem[]) || []);
+
+      // Sanitizing data to prevent crashes
+      const validItems = (data || []).map((item: any) => ({
+        id: item.id,
+        product_id: item.product_id,
+        quantity: item.quantity || 1,
+        product: Array.isArray(item.product) ? item.product[0] : item.product
+      })).filter((item) => item.product != null) as CartItem[];
+
+      setItems(validItems);
     } catch (error) {
       console.error('Error fetching cart:', error);
     } finally {

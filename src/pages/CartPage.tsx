@@ -32,7 +32,7 @@ export default function CartPage() {
       // Create orders for each item in cart
       const orderPromises = items.map(async (item) => {
         // Create order
-        const { error: orderError } = await supabase
+        const { data: orderData, error: orderError } = await supabase
           .from('orders')
           .insert({
             buyer_id: user.id,
@@ -55,7 +55,7 @@ export default function CartPage() {
 
         if (productError) throw productError;
 
-        return orderData.id;
+        return orderData?.id;
       });
 
       const orderIds = await Promise.all(orderPromises);

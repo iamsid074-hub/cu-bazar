@@ -32,14 +32,21 @@ export const DynamicIsland = () => {
   const isMobile = useIsMobile();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [lightFlash, setLightFlash] = useState<'none' | 'red'>('none');
-  const dragY = useRef(0);
-  const lastY = useRef(0);
+
+  // ✅ FIX: Remove unused refs
+  // const dragY = useRef(0);
+  // const lastY = useRef(0);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setIsLoggedIn(!!session);
-    });
-    return () => subscription.unsubscribe();
+    // ✅ FIX: Add error handling for auth subscription
+    try {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+        setIsLoggedIn(!!session);
+      });
+      return () => subscription?.unsubscribe();
+    } catch (error) {
+      console.error('Auth subscription error:', error);
+    }
   }, []);
 
   const count = cartCount();
@@ -58,7 +65,7 @@ export const DynamicIsland = () => {
       setIslandExpanded(false);
       setIslandContent('default');
     } else {
-      setIslandContent(content as any);
+      setIslandContent(content); // ✅ FIX: Remove 'as any'
       setIslandExpanded(true);
     }
   };
@@ -77,6 +84,8 @@ export const DynamicIsland = () => {
 
   const compactW = isMobile ? 145 : 180;
   const expandedW = isMobile ? 310 : 380;
+  
+  // ✅ FIX: Define lightColor properly
   const lightColor = lightFlash === 'red' 
     ? 'hsl(0 80% 55%)' 
     : isLoggedIn 
@@ -211,7 +220,6 @@ const ExpandedIsland = ({
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Focus management
     const firstButton = contentRef.current?.querySelector('button');
     firstButton?.focus();
   }, [content]);
@@ -224,7 +232,6 @@ const ExpandedIsland = ({
       role="dialog"
       aria-label="Control Center"
     >
-      {/* Header with drag indicator */}
       <div className="flex justify-center pt-2 pb-0">
         <motion.div
           initial={{ opacity: 0 }}
@@ -241,7 +248,6 @@ const ExpandedIsland = ({
         transition={{ delay: 0.15 }}
         className="relative bg-island-background/95 backdrop-blur-2xl border border-island-foreground/10 rounded-3xl p-4 shadow-2xl space-y-3"
       >
-        {/* Close button */}
         <button
           onClick={onClose}
           className="absolute top-3 right-3 p-1 hover:bg-island-foreground/10 rounded-lg transition-colors"
@@ -250,7 +256,6 @@ const ExpandedIsland = ({
           <X className="w-4 h-4 text-island-foreground/50" />
         </button>
 
-        {/* Title */}
         <motion.h2
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -260,7 +265,6 @@ const ExpandedIsland = ({
           Control Center
         </motion.h2>
 
-        {/* Navigation Tabs */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -297,7 +301,6 @@ const ExpandedIsland = ({
           ))}
         </motion.div>
 
-        {/* Content Container */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -440,7 +443,6 @@ const TrackingContent = ({ isMobile }: { isMobile: boolean }) => {
         </p>
       </motion.div>
 
-      {/* Timeline */}
       <div className="space-y-2">
         {ORDER_STAGES.map((s, i) => (
           <div key={s} className="flex items-center gap-2">

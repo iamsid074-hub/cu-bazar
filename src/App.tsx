@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import DynamicIsland from "@/components/dynamic-island/DynamicIsland";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";

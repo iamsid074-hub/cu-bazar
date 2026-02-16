@@ -105,10 +105,8 @@ export function ProductCarousel3DPremium() {
             className="relative w-full md:w-96 z-10"
           >
             {/* Liquid glass card container */}
-            <motion.div
+            <div
               className="relative rounded-3xl overflow-hidden group"
-              whileHover={{ scale: 1.02, y: -10 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             >
               {/* Premium glow background */}
               <div className="absolute -inset-1 rounded-3xl opacity-75 blur-2xl transition-all duration-300 group-hover:opacity-100"
@@ -180,24 +178,17 @@ export function ProductCarousel3DPremium() {
                   <h3 className="text-2xl font-bold text-white mb-2">{product.title}</h3>
                   
                   {/* Price with gradient */}
-                  <motion.div
-                    className="flex items-baseline gap-2"
-                    whileHover={{ scale: 1.05 }}
-                  >
+                  <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-bold bg-gradient-to-r from-primary to-orange-400 bg-clip-text text-transparent">
                       ₹{product.price.toLocaleString()}
                     </span>
-                  </motion.div>
+                  </div>
 
                   {/* Action button */}
-                  <motion.div
-                    className="mt-6"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
+                  <div className="mt-6">
                     <Link
                       to={`/product/${product.id}`}
-                      className="w-full block text-center py-3 rounded-xl font-semibold text-white transition-all duration-300"
+                      className="w-full block text-center py-3 rounded-xl font-semibold text-white transition-all duration-300 hover:opacity-90"
                       style={{
                         background: 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.8) 100%)',
                         boxShadow: '0 8px 24px -8px hsl(var(--primary) / 0.4)',
@@ -205,7 +196,7 @@ export function ProductCarousel3DPremium() {
                     >
                       View Details
                     </Link>
-                  </motion.div>
+                  </div>
                 </motion.div>
               </div>
 
@@ -219,7 +210,7 @@ export function ProductCarousel3DPremium() {
                   `,
                 }}
               />
-            </motion.div>
+            </div>
           </motion.div>
 
           {/* Side preview cards - Right */}
@@ -242,7 +233,7 @@ export function ProductCarousel3DPremium() {
           {/* Navigation buttons */}
           <button
             onClick={() => paginate(-1)}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full transition-all duration-300 hover:scale-110"
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full transition-all duration-300 hover:scale-105"
             style={{
               background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%)',
               backdropFilter: 'blur(10px)',
@@ -254,7 +245,7 @@ export function ProductCarousel3DPremium() {
 
           <button
             onClick={() => paginate(1)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full transition-all duration-300 hover:scale-110"
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full transition-all duration-300 hover:scale-105"
             style={{
               background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%)',
               backdropFilter: 'blur(10px)',
@@ -274,12 +265,11 @@ export function ProductCarousel3DPremium() {
                 setDirection(index > currentIndex ? 1 : -1);
                 setCurrentIndex(index);
               }}
-              className="h-2 rounded-full transition-all duration-300"
+              className="h-2 rounded-full transition-all duration-300 hover:opacity-80"
               animate={{
                 width: index === currentIndex ? 32 : 8,
                 background: index === currentIndex ? 'hsl(var(--primary))' : 'rgba(255,255,255,0.3)',
               }}
-              whileHover={{ scale: 1.2 }}
             />
           ))}
         </div>

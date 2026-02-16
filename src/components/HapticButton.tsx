@@ -1,12 +1,3 @@
-/**
- * Enhanced Button Component with Haptic Feedback
- * Apple-style liquid interactions
- * 
- * Usage:
- * <HapticButton>Click me</HapticButton>
- * <HapticButton variant="liquidglass" hapticType="medium">Important Action</HapticButton>
- */
-
 import React from 'react';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import { buttonVariants, type ButtonProps } from '@/components/ui/button';

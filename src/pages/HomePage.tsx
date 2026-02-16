@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles, Shield, Users, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import HapticButton from '@/components/HapticButton';
+import { HeroLiquidGlassCard } from '@/components/layout/HeroLiquidGlassCard';
 import { ProductCard } from '@/components/products/ProductCard';
 import { CategoryDock } from '@/components/products/CategoryDock';
 import { ProductCarousel3DPremium } from '@/components/products/Productcarousel3d premium';
@@ -77,6 +78,13 @@ export default function HomePage() {
         
         {/* Overlay */}
         <div className="video-overlay" />
+
+        {/* Liquid Glass Card Background - Perfect Square */}
+        <div className="absolute inset-0 z-0 flex items-center justify-center px-4">
+          <div className="relative w-full max-w-2xl aspect-video rounded-3xl">
+            <HeroLiquidGlassCard />
+          </div>
+        </div>
         
         {/* Content */}
         <div className="relative z-10 container mx-auto px-4 text-center">
@@ -92,8 +100,8 @@ export default function HomePage() {
             </div>
             
             <h1 className="font-display text-5xl md:text-7xl font-bold mb-6">
-              Buy & Sell at
-              <span className="block cu-gradient-text">CU Bazar</span>
+              CU Bazzar
+              <span className="block cu-gradient-text">Welcomes You</span>
             </h1>
             
             <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">

@@ -153,7 +153,7 @@ export default function HomePage() {
               <h2 className="font-display text-3xl font-bold text-foreground">Browse Categories</h2>
               <p className="text-muted-foreground mt-1">Find exactly what you need</p>
             </div>
-            <Button variant="glass" asChild>
+            <Button variant="liquidglass" asChild>
               <Link to="/auth">View All <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
           </div>
@@ -183,7 +183,7 @@ export default function HomePage() {
                 <h2 className="font-display text-3xl font-bold text-foreground">Featured Deals</h2>
                 <p className="text-muted-foreground mt-1">Hand-picked by our team</p>
               </div>
-              <Button variant="glass" asChild>
+              <Button variant="liquidglass" asChild>
                 <Link to="/auth">View All <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
             </div>
@@ -205,7 +205,7 @@ export default function HomePage() {
               <h2 className="font-display text-3xl font-bold text-foreground">Recently Added</h2>
               <p className="text-muted-foreground mt-1">Fresh listings just for you</p>
             </div>
-            <Button variant="glass" asChild>
+            <Button variant="liquidglass" asChild>
               <Link to="/auth">View All <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
           </div>
@@ -241,7 +241,7 @@ export default function HomePage() {
             <p className="text-primary-foreground/80 text-lg mb-8 max-w-xl mx-auto">
               Turn your unused items into cash. List your products in minutes and reach thousands of students.
             </p>
-            <Button size="lg" variant="glass" asChild className="text-lg px-8 bg-white/20 hover:bg-white/30">
+            <Button size="lg" variant="liquidglass" asChild className="text-lg px-8">
               <Link to="/auth?mode=signup">Start Selling Now</Link>
             </Button>
           </motion.div>

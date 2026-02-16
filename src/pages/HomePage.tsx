@@ -3,9 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles, Shield, Users, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import HapticButton from '@/components/HapticButton';
 import { ProductCard } from '@/components/products/ProductCard';
 import { CategoryDock } from '@/components/products/CategoryDock';
-import { ProductCarousel3D } from '@/components/products/ProductCarousel3D';
+import { ProductCarousel3DPremium } from '@/components/products/Productcarousel3d premium';
 import { VideoBackground } from '@/components/layout/VideoBackground';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -100,11 +101,11 @@ export default function HomePage() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" asChild className="cu-gradient border-0 text-lg px-8 animate-pulse-glow">
+              <HapticButton size="lg" hapticType="medium" className="cu-gradient border-0 text-lg px-8 animate-pulse-glow" asChild>
                 <Link to="/auth?mode=signup">
                   Get Started <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
-              </Button>
+              </HapticButton>
               <Button size="lg" variant="outline" asChild className="text-lg px-8">
                 <Link to="/auth">Sign In</Link>
               </Button>
@@ -153,9 +154,9 @@ export default function HomePage() {
               <h2 className="font-display text-3xl font-bold text-foreground">Browse Categories</h2>
               <p className="text-muted-foreground mt-1">Find exactly what you need</p>
             </div>
-            <Button variant="liquidglass" asChild>
+            <HapticButton variant="liquidglass" hapticType="light" asChild>
               <Link to="/auth">View All <ArrowRight className="ml-2 h-4 w-4" /></Link>
-            </Button>
+            </HapticButton>
           </div>
           
           <CategoryDock categories={categories} />
@@ -165,12 +166,7 @@ export default function HomePage() {
       {/* 3D Product Carousel */}
       <section className="py-16 bg-muted/20 overflow-hidden">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
-            <h2 className="font-display text-3xl font-bold text-foreground">Trending Items</h2>
-            <p className="text-muted-foreground mt-1">Hot picks from campus</p>
-          </div>
-          
-          <ProductCarousel3D />
+          <ProductCarousel3DPremium />
         </div>
       </section>
 
@@ -183,9 +179,9 @@ export default function HomePage() {
                 <h2 className="font-display text-3xl font-bold text-foreground">Featured Deals</h2>
                 <p className="text-muted-foreground mt-1">Hand-picked by our team</p>
               </div>
-              <Button variant="liquidglass" asChild>
+              <HapticButton variant="liquidglass" hapticType="light" asChild>
                 <Link to="/auth">View All <ArrowRight className="ml-2 h-4 w-4" /></Link>
-              </Button>
+              </HapticButton>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -205,9 +201,9 @@ export default function HomePage() {
               <h2 className="font-display text-3xl font-bold text-foreground">Recently Added</h2>
               <p className="text-muted-foreground mt-1">Fresh listings just for you</p>
             </div>
-            <Button variant="liquidglass" asChild>
+            <HapticButton variant="liquidglass" hapticType="light" asChild>
               <Link to="/auth">View All <ArrowRight className="ml-2 h-4 w-4" /></Link>
-            </Button>
+            </HapticButton>
           </div>
           
           {recentProducts.length > 0 ? (
@@ -241,9 +237,9 @@ export default function HomePage() {
             <p className="text-primary-foreground/80 text-lg mb-8 max-w-xl mx-auto">
               Turn your unused items into cash. List your products in minutes and reach thousands of students.
             </p>
-            <Button size="lg" variant="liquidglass" asChild className="text-lg px-8">
+            <HapticButton size="lg" variant="liquidglass" hapticType="heavy" asChild className="text-lg px-8">
               <Link to="/auth?mode=signup">Start Selling Now</Link>
-            </Button>
+            </HapticButton>
           </motion.div>
         </div>
       </section>

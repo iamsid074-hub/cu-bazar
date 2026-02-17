@@ -55,26 +55,31 @@ export function CategoryDock({ categories }: CategoryDockProps) {
   const dockRef = useRef<HTMLDivElement>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-  const [touchStartX, setTouchStartX] = useState<number | null>(null);
-  const [scrollPosition, setScrollPosition] = useState(0);
+  const [screenSize, setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Check if mobile on mount and resize
+  // Responsive breakpoints: mobile (< 640px), tablet (640px - 1024px), desktop (> 1024px)
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+    const checkScreenSize = () => {
+      const width = window.innerWidth;
+      if (width < 640) {
+        setScreenSize('mobile');
+      } else if (width < 1024) {
+        setScreenSize('tablet');
+      } else {
+        setScreenSize('desktop');
+      }
     };
     
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
     
-    return () => window.removeEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
   // Desktop mouse tracking
   useEffect(() => {
-    if (isMobile) return;
+    if (screenSize !== 'desktop') return;
     
     const handleMouseMove = (e: MouseEvent) => {
       if (dockRef.current) {
@@ -102,38 +107,50 @@ export function CategoryDock({ categories }: CategoryDockProps) {
         dock.removeEventListener('mouseleave', handleMouseLeave);
       }
     };
-  }, [isMobile]);
+  }, [screenSize]);
 
-  // Mobile touch scroll handling
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStartX(e.touches[0].clientX);
+  // Get responsive icon sizes
+  const getIconSizes = () => {
+    switch (screenSize) {
+      case 'mobile':
+        return { 
+          icon: 56, // w-14 h-14
+          text: 'text-2xl',
+          label: 'text-xs',
+          gap: 'gap-2',
+          containerPadding: 'px-3 py-4',
+        };
+      case 'tablet':
+        return { 
+          icon: 64, // w-16 h-16
+          text: 'text-3xl',
+          label: 'text-sm',
+          gap: 'gap-2.5',
+          containerPadding: 'px-4 py-5',
+        };
+      case 'desktop':
+        return { 
+          icon: 72, // w-20 h-20
+          text: 'text-4xl',
+          label: 'text-xs',
+          gap: 'gap-4',
+          containerPadding: 'px-10 pb-5 pt-3',
+        };
+    }
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!touchStartX || !scrollContainerRef.current) return;
-    
-    const touchEndX = e.touches[0].clientX;
-    const diff = touchStartX - touchEndX;
-    const maxScroll = scrollContainerRef.current.scrollWidth - scrollContainerRef.current.clientWidth;
-    
-    setScrollPosition(prev => {
-      const newPos = Math.max(0, Math.min(maxScroll, prev + diff));
-      if (scrollContainerRef.current) {
-        scrollContainerRef.current.scrollLeft = newPos;
-      }
-      return newPos;
-    });
-    
-    setTouchStartX(touchEndX);
-  };
-
-  const handleTouchEnd = () => {
-    setTouchStartX(null);
+  // Get responsive dock width
+  const getDockWidth = () => {
+    const itemWidth = screenSize === 'mobile' ? 80 : screenSize === 'tablet' ? 100 : 120;
+    const minWidth = screenSize === 'mobile' ? 300 : screenSize === 'tablet' ? 400 : 500;
+    return Math.max(categories.length * itemWidth, minWidth);
   };
 
   // Desktop scale calculation
   const getIconTransform = (index: number) => {
-    if (isMobile || hoveredIndex === null) return { scale: 1, lift: 0, rotateX: 0, rotateY: 0, marginX: 0 };
+    if (screenSize !== 'desktop' || hoveredIndex === null) {
+      return { scale: 1, lift: 0, rotateX: 0, rotateY: 0, marginX: 0 };
+    }
     
     const distance = Math.abs(index - hoveredIndex);
     const maxDistance = 4;
@@ -173,12 +190,14 @@ export function CategoryDock({ categories }: CategoryDockProps) {
     };
   };
 
-  // Mobile: Compact grid view
-  if (isMobile) {
+  const sizes = getIconSizes();
+
+  // Mobile & Tablet Layout: Scrollable Grid
+  if (screenSize === 'mobile' || screenSize === 'tablet') {
     return (
-      <div className="relative w-full py-6">
-        {/* Mobile Background */}
-        <div className="absolute inset-0 overflow-hidden rounded-2xl">
+      <div className="relative w-full py-4 sm:py-6">
+        {/* Background */}
+        <div className="absolute inset-0 overflow-hidden rounded-xl sm:rounded-2xl">
           <div 
             className="w-full h-full bg-cover bg-center"
             style={{
@@ -186,26 +205,25 @@ export function CategoryDock({ categories }: CategoryDockProps) {
               opacity: 0.8,
             }}
           />
-          <div className="absolute inset-0 bg-black/30" />
+          <div className="absolute inset-0 bg-black/40 sm:bg-black/30" />
         </div>
 
-        {/* Mobile Categories Grid */}
-        <div className="relative px-4">
-          <h2 className="text-white text-lg font-semibold mb-3 px-1">Categories</h2>
+        {/* Categories Container */}
+        <div className="relative">
+          <h2 className="text-white text-base sm:text-lg font-semibold mb-2 sm:mb-3 px-3 sm:px-4">
+            Categories
+          </h2>
           
           {/* Horizontal Scrollable Categories */}
           <div 
             ref={scrollContainerRef}
-            className="overflow-x-auto scrollbar-hide pb-2"
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
+            className="overflow-x-auto scrollbar-hide pb-2 sm:pb-3"
             style={{
               scrollBehavior: 'smooth',
               WebkitOverflowScrolling: 'touch',
             }}
           >
-            <div className="flex gap-3 min-w-max px-1">
+            <div className={`flex ${sizes.gap} min-w-max ${sizes.containerPadding}`}>
               {categories.map((category, index) => {
                 const config = macIconConfig[category.icon || 'Package'] || macIconConfig.Package;
                 const isFinder = index === 0;
@@ -221,14 +239,16 @@ export function CategoryDock({ categories }: CategoryDockProps) {
                   >
                     <Link
                       to={`/browse?category=${category.name.toLowerCase()}`}
-                      className="flex flex-col items-center gap-1"
+                      className="flex flex-col items-center gap-1 sm:gap-1.5"
                     >
-                      {/* Mobile Icon */}
-                      <div 
-                        className="w-16 h-16 rounded-xl overflow-hidden relative active:scale-95 transition-transform duration-150"
+                      {/* Icon */}
+                      <motion.div 
+                        className="rounded-lg sm:rounded-xl overflow-hidden relative active:scale-95 transition-transform duration-150"
                         style={{
+                          width: sizes.icon,
+                          height: sizes.icon,
                           background: `linear-gradient(145deg, ${config.color}, ${config.color}dd)`,
-                          boxShadow: '0 8px 16px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.2) inset',
+                          boxShadow: '0 6px 12px sm:0 8px 16px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.2) inset',
                         }}
                       >
                         <div 
@@ -238,13 +258,13 @@ export function CategoryDock({ categories }: CategoryDockProps) {
                             opacity: 0.5,
                           }}
                         />
-                        <span className="absolute inset-0 flex items-center justify-center text-3xl">
+                        <span className={`absolute inset-0 flex items-center justify-center ${sizes.text}`}>
                           {isFinder ? '😊' : isTrash ? '🗑️' : config.icon}
                         </span>
-                      </div>
+                      </motion.div>
                       
-                      {/* Mobile Label */}
-                      <span className="text-xs font-medium text-white bg-black/50 px-2 py-0.5 rounded-full backdrop-blur-sm">
+                      {/* Label */}
+                      <span className={`${sizes.label} font-medium text-white bg-black/50 px-2 py-0.5 rounded-full backdrop-blur-sm whitespace-nowrap`}>
                         {isFinder ? 'Finder' : isTrash ? 'Trash' : category.name}
                       </span>
                     </Link>
@@ -252,18 +272,6 @@ export function CategoryDock({ categories }: CategoryDockProps) {
                 );
               })}
             </div>
-          </div>
-
-          {/* Scroll Indicator */}
-          <div className="flex justify-center mt-2 gap-1">
-            {categories.map((_, i) => (
-              <div
-                key={i}
-                className={`h-1 rounded-full transition-all duration-300 ${
-                  i === Math.floor(scrollPosition / 80) ? 'w-4 bg-white' : 'w-1 bg-white/50'
-                }`}
-              />
-            ))}
           </div>
         </div>
 
@@ -282,9 +290,9 @@ export function CategoryDock({ categories }: CategoryDockProps) {
 
   // Desktop: Mac-style dock
   return (
-    <div className="relative w-full py-16 md:py-20">
+    <div className="relative w-full py-16 lg:py-20">
       {/* Dynamic Gradient Background */}
-      <div className="absolute inset-0 overflow-hidden rounded-3xl md:rounded-4xl">
+      <div className="absolute inset-0 overflow-hidden rounded-3xl lg:rounded-4xl">
         <motion.div 
           className="w-full h-full"
           animate={{
@@ -316,7 +324,8 @@ export function CategoryDock({ categories }: CategoryDockProps) {
               0 0 0 1px rgba(255, 255, 255, 0.12) inset,
               0 -2px 0 rgba(0, 0, 0, 0.2) inset
             `,
-            minWidth: `${Math.max(categories.length * 80, 400)}px`,
+            minWidth: `${getDockWidth()}px`,
+            maxWidth: '95vw',
           }}
         >
           {/* Dock Highlight */}

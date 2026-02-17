@@ -7,7 +7,7 @@ import HapticButton from '@/components/HapticButton';
 import { HeroLiquidGlassCard } from '@/components/layout/HeroLiquidGlassCard';
 import { ProductCard } from '@/components/products/ProductCard';
 import { CategoryDock } from '@/components/products/CategoryDock';
-import { ProductCarousel3DPremium } from '@/components/products/Productcarousel3d premium';
+import { ProductCarousel3DAdvanced } from '@/components/products/Productcarousel3d premium';
 import { VideoBackground } from '@/components/layout/VideoBackground';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -100,8 +100,8 @@ export default function HomePage() {
             </div>
             
             <h1 className="font-display text-5xl md:text-7xl font-bold mb-6">
-              CU Bazzar
-              <span className="block cu-gradient-text">Welcomes You</span>
+              Buy & Sell 
+              <span className="block cu-gradient-text">CU Bazar</span>
             </h1>
             
             <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
@@ -174,7 +174,7 @@ export default function HomePage() {
       {/* 3D Product Carousel */}
       <section className="py-16 bg-muted/20 overflow-hidden">
         <div className="container mx-auto px-4">
-          <ProductCarousel3DPremium />
+          <ProductCarousel3DAdvanced />
         </div>
       </section>
 

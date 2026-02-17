@@ -1,13 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  Smartphone, 
-  BookOpen, 
-  Sofa, 
-  Bike, 
-  Package,
-  LucideIcon 
-} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 interface Category {
   id: string;
@@ -19,186 +12,446 @@ interface CategoryDockProps {
   categories: Category[];
 }
 
-const iconConfig: Record<string, { Icon: LucideIcon; color: string; bg: string }> = {
-  Smartphone: { Icon: Smartphone, color: '#3B82F6', bg: 'linear-gradient(135deg, #3B82F6, #1D4ED8)' },
-  BookOpen: { Icon: BookOpen, color: '#F97316', bg: 'linear-gradient(135deg, #F97316, #EA580C)' },
-  Sofa: { Icon: Sofa, color: '#8B5CF6', bg: 'linear-gradient(135deg, #8B5CF6, #7C3AED)' },
-  Bike: { Icon: Bike, color: '#10B981', bg: 'linear-gradient(135deg, #10B981, #059669)' },
-  Package: { Icon: Package, color: '#6366F1', bg: 'linear-gradient(135deg, #6366F1, #4F46E5)' },
+// Modern macOS Sonoma-style icons
+const macIconConfig: Record<string, { icon: string; color: string; reflection: string }> = {
+  Smartphone: { 
+    icon: '📱', 
+    color: '#5E5CE6',
+    reflection: 'linear-gradient(145deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 60%)'
+  },
+  BookOpen: { 
+    icon: '📚', 
+    color: '#FF9F0A',
+    reflection: 'linear-gradient(145deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 60%)'
+  },
+  Sofa: { 
+    icon: '🛋️', 
+    color: '#BF5AF2',
+    reflection: 'linear-gradient(145deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 60%)'
+  },
+  Bike: { 
+    icon: '🚲', 
+    color: '#32D74B',
+    reflection: 'linear-gradient(145deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 60%)'
+  },
+  Package: { 
+    icon: '📦', 
+    color: '#64D2FF',
+    reflection: 'linear-gradient(145deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 60%)'
+  },
+  Finder: { 
+    icon: '😊', 
+    color: '#5E5CE6',
+    reflection: 'linear-gradient(145deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 60%)'
+  },
+  Trash: { 
+    icon: '🗑️', 
+    color: '#8E8E93',
+    reflection: 'linear-gradient(145deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 60%)'
+  },
 };
 
 export function CategoryDock({ categories }: CategoryDockProps) {
+  const dockRef = useRef<HTMLDivElement>(null);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null);
+  const [iconPositions, setIconPositions] = useState<{ left: number; width: number }[]>([]);
+
+  // Track mouse position for smooth magnification
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (dockRef.current) {
+        const rect = dockRef.current.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        const y = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+        setMousePosition({ x, y });
+      }
+    };
+
+    const handleMouseLeave = () => {
+      setMousePosition(null);
+      setHoveredIndex(null);
+    };
+
+    const dock = dockRef.current;
+    if (dock) {
+      dock.addEventListener('mousemove', handleMouseMove);
+      dock.addEventListener('mouseleave', handleMouseLeave);
+    }
+
+    return () => {
+      if (dock) {
+        dock.removeEventListener('mousemove', handleMouseMove);
+        dock.removeEventListener('mouseleave', handleMouseLeave);
+      }
+    };
+  }, []);
+
+  // Calculate icon positions for smooth spacing
+  useEffect(() => {
+    if (dockRef.current && categories.length > 0) {
+      const icons = dockRef.current.querySelectorAll('.dock-icon');
+      const positions = Array.from(icons).map(icon => {
+        const rect = icon.getBoundingClientRect();
+        const dockRect = dockRef.current!.getBoundingClientRect();
+        return {
+          left: rect.left - dockRect.left,
+          width: rect.width,
+        };
+      });
+      setIconPositions(positions);
+    }
+  }, [categories, hoveredIndex]);
+
+  // Calculate smooth scale based on distance to hovered icon
+  const getIconTransform = (index: number) => {
+    if (hoveredIndex === null) return { scale: 1, lift: 0, rotateX: 0, rotateY: 0, marginX: 0 };
+    
+    const distance = Math.abs(index - hoveredIndex);
+    const maxDistance = 4; // Increased for smoother falloff
+    
+    if (distance > maxDistance) return { scale: 1, lift: 0, rotateX: 0, rotateY: 0, marginX: 0 };
+    
+    // Ultra-smooth falloff using smoothstep function
+    const t = Math.max(0, 1 - distance / maxDistance);
+    const smoothT = t * t * (3 - 2 * t); // Smoothstep interpolation
+    
+    // Scale ranges with smoother progression
+    const scaleMap = [2.4, 2.0, 1.6, 1.3, 1.1];
+    const scale = 1 + (scaleMap[distance] - 1) * smoothT;
+    
+    // Progressive lift with easing
+    const liftMap = [28, 22, 16, 8, 3];
+    const lift = liftMap[distance] * smoothT;
+    
+    // Dynamic margin to prevent overlapping
+    const marginMap = [32, 24, 16, 8, 4];
+    const marginX = marginMap[distance] * smoothT;
+    
+    // Subtle 3D rotation based on mouse position
+    const rotateX = mousePosition?.y ? mousePosition.y * (3 - distance) : 0;
+    const rotateY = mousePosition?.x ? mousePosition.x * (3 - distance) : 0;
+    
+    return { scale, lift, rotateX, rotateY, marginX };
+  };
+
+  // Calculate dynamic spacing based on hover state
+  const getIconStyle = (index: number) => {
+    const transform = getIconTransform(index);
+    
+    return {
+      scale: transform.scale,
+      y: -transform.lift,
+      rotateX: transform.rotateX,
+      rotateY: transform.rotateY,
+      marginLeft: index === 0 ? 0 : transform.marginX / 2,
+      marginRight: index === categories.length - 1 ? 0 : transform.marginX / 2,
+      zIndex: transform.scale > 1.5 ? 10 : transform.scale > 1.2 ? 5 : 1,
+    };
+  };
+
   return (
-    <div className="relative w-full py-6 md:py-8">
-      {/* Video Background */}
-      <div className="absolute inset-0 overflow-hidden rounded-2xl md:rounded-3xl">
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="w-full h-full object-cover opacity-60"
-          src="https://assets.mixkit.co/videos/preview/mixkit-abstract-flowing-colors-4816-large.mp4"
+    <div className="relative w-full py-16 md:py-20">
+      {/* Dynamic Gradient Background */}
+      <div className="absolute inset-0 overflow-hidden rounded-3xl md:rounded-4xl">
+        <motion.div 
+          className="w-full h-full"
+          animate={{
+            background: mousePosition 
+              ? `radial-gradient(circle at ${50 + mousePosition.x * 25}% ${50 + mousePosition.y * 25}%, #2E3192, #1B1464)`
+              : 'radial-gradient(circle at 30% 30%, #2E3192, #1B1464)',
+          }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-transparent to-background/40" />
+        <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px]" />
       </div>
 
-      {/* SVG Filter - Advanced liquid glass */}
-      <svg className="absolute w-0 h-0" aria-hidden="true">
-        <defs>
-          <filter
-            id="glass-distortion-dock"
-            x="0%"
-            y="0%"
-            width="100%"
-            height="100%"
-            filterUnits="objectBoundingBox"
-          >
-            <feTurbulence
-              type="fractalNoise"
-              baseFrequency="0.01 0.01"
-              numOctaves="1"
-              seed="5"
-              result="turbulence"
-            />
-            <feComponentTransfer in="turbulence" result="mapped">
-              <feFuncR type="gamma" amplitude="1" exponent="10" offset="0.5" />
-              <feFuncG type="gamma" amplitude="0" exponent="1" offset="0" />
-              <feFuncB type="gamma" amplitude="0" exponent="1" offset="0.5" />
-            </feComponentTransfer>
-            <feGaussianBlur in="turbulence" stdDeviation="3" result="softMap" />
-            <feSpecularLighting
-              in="softMap"
-              surfaceScale="5"
-              specularConstant="1"
-              specularExponent="100"
-              lightingColor="white"
-              result="specLight"
-            >
-              <fePointLight x="-200" y="-200" z="300" />
-            </feSpecularLighting>
-            <feComposite
-              in="specLight"
-              operator="arithmetic"
-              k1="0"
-              k2="1"
-              k3="1"
-              k4="0"
-              result="litImage"
-            />
-            <feDisplacementMap
-              in="SourceGraphic"
-              in2="softMap"
-              scale="20"
-              xChannelSelector="R"
-              yChannelSelector="G"
-            />
-          </filter>
-        </defs>
-      </svg>
-
-      {/* Horizontally Scrollable Category Dock */}
+      {/* Main Dock Container */}
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 100 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.175, 0.885, 0.32, 1.275] }}
-        className="relative px-2 md:mx-auto md:max-w-fit"
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="relative flex justify-center"
       >
-        {/* Glass wrapper */}
+        {/* Dock Base - Extended width */}
         <div 
-          className="relative rounded-2xl md:rounded-[2rem] p-2 md:p-3 overflow-hidden transition-all duration-500 hover:md:p-4 hover:md:rounded-[2.5rem]"
+          ref={dockRef}
+          className="relative px-10 pb-5 pt-3 rounded-[40px]"
           style={{
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25), 0 0 40px rgba(0, 0, 0, 0.1)',
+            background: 'rgba(28, 28, 32, 0.75)',
+            backdropFilter: 'blur(30px) saturate(200%)',
+            WebkitBackdropFilter: 'blur(30px) saturate(200%)',
+            boxShadow: `
+              0 30px 50px -10px rgba(0, 0, 0, 0.4),
+              0 0 0 1px rgba(255, 255, 255, 0.12) inset,
+              0 -2px 0 rgba(0, 0, 0, 0.2) inset
+            `,
+            minWidth: `${Math.max(categories.length * 80, 400)}px`, // Dynamic min width
           }}
         >
-          {/* Glass effect layer */}
-          <div 
-            className="absolute inset-0 z-0 backdrop-blur-md"
-            style={{ filter: 'url(#glass-distortion-dock)' }}
+          {/* Dock Highlight Line */}
+          <motion.div 
+            className="absolute top-0 left-10 right-10 h-[2px] rounded-full"
+            animate={{
+              background: mousePosition
+                ? `linear-gradient(90deg, 
+                    rgba(255,255,255,0.1) 0%, 
+                    rgba(255,255,255,0.9) ${50 + (mousePosition.x || 0) * 20}%, 
+                    rgba(255,255,255,0.1) 100%)`
+                : 'linear-gradient(90deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.2) 100%)',
+            }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
           />
 
-          {/* Tint layer */}
-          <div className="absolute inset-0 z-[1] bg-white/40 dark:bg-white/10" />
-
-          {/* Shine layer */}
-          <div 
-            className="absolute inset-0 z-[2] rounded-[inherit]"
-            style={{
-              boxShadow: 'inset 2px 2px 4px 0 rgba(255, 255, 255, 0.6), inset -2px -2px 4px 0 rgba(255, 255, 255, 0.3)',
-            }}
-          />
-
-          {/* Animated shimmer */}
-          <div className="absolute inset-0 z-[3] overflow-hidden rounded-[inherit]">
-            <div 
-              className="absolute inset-0 -translate-x-full animate-[shimmer_3s_infinite]"
-              style={{
-                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
-              }}
-            />
-          </div>
-
-          {/* Content - Horizontally Scrollable Category Icons */}
-          <div 
-            className="relative z-[4] flex items-center gap-2 sm:gap-3 overflow-x-auto scrollbar-hide px-1 py-1"
-            style={{ 
-              WebkitOverflowScrolling: 'touch',
-              scrollSnapType: 'x mandatory'
-            }}
-          >
+          {/* Icons Container with increased gap */}
+          <div className="flex items-end justify-center gap-4">
             {categories.map((category, index) => {
-              const config = iconConfig[category.icon || 'Package'] || iconConfig.Package;
-              const IconComponent = config.Icon;
+              const config = macIconConfig[category.icon || 'Package'] || macIconConfig.Package;
+              const isFinder = index === 0;
+              const isTrash = index === categories.length - 1;
+              const style = getIconStyle(index);
+              const isHovered = hoveredIndex === index;
 
               return (
                 <motion.div
                   key={category.id}
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.4, delay: index * 0.05 }}
-                  style={{ scrollSnapAlign: 'start' }}
-                  className="flex-shrink-0"
+                  initial={{ opacity: 0, scale: 0.5, y: 20 }}
+                  animate={{ 
+                    opacity: 1, 
+                    scale: 1,
+                    y: 0,
+                    transition: { 
+                      duration: 0.6, 
+                      delay: index * 0.05,
+                      ease: [0.16, 1, 0.3, 1]
+                    }
+                  }}
+                  className="dock-icon relative"
+                  onHoverStart={() => setHoveredIndex(index)}
+                  onHoverEnd={() => setHoveredIndex(null)}
                 >
                   <Link
                     to={`/browse?category=${category.name.toLowerCase()}`}
-                    className="group flex flex-col items-center gap-1 md:gap-1.5"
+                    className="block relative"
                   >
+                    {/* Icon Container with smooth transforms */}
                     <motion.div
-                      whileHover={{ scale: 0.92 }}
-                      whileTap={{ scale: 0.88 }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-                      className="relative w-12 h-12 sm:w-14 sm:h-14 md:w-[70px] md:h-[70px] rounded-xl md:rounded-2xl flex items-center justify-center cursor-pointer overflow-hidden"
-                      style={{ background: config.bg }}
+                      className="relative cursor-pointer"
+                      animate={{
+                        scale: style.scale,
+                        y: style.y,
+                        rotateX: style.rotateX,
+                        rotateY: style.rotateY,
+                        marginLeft: style.marginLeft,
+                        marginRight: style.marginRight,
+                      }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 350,
+                        damping: 28,
+                        mass: 0.6,
+                      }}
+                      style={{
+                        transformStyle: 'preserve-3d',
+                        transformOrigin: 'center bottom',
+                        width: '72px', // Larger icon base
+                        height: '72px',
+                      }}
                     >
-                      {/* Icon glow */}
-                      <div 
-                        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      {/* Icon Background with depth */}
+                      <motion.div
+                        className="w-full h-full rounded-2xl overflow-hidden relative"
                         style={{
-                          boxShadow: `inset 0 0 20px ${config.color}`,
+                          background: `linear-gradient(145deg, ${config.color}, ${config.color}dd)`,
+                          boxShadow: `
+                            0 ${style.scale * 10}px ${style.scale * 20}px rgba(0,0,0,0.3),
+                            0 0 0 2px rgba(255,255,255,0.2) inset,
+                            0 -3px 0 rgba(0,0,0,0.2) inset
+                          `,
                         }}
-                      />
-                      
-                      {/* Inner shine */}
-                      <div 
-                        className="absolute inset-0"
-                        style={{
-                          boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.4), inset 0 -2px 4px rgba(0,0,0,0.1)',
-                        }}
-                      />
-                      
-                      <IconComponent className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white drop-shadow-lg relative z-10" />
+                      >
+                        {/* Reflection Layer */}
+                        <motion.div 
+                          className="absolute inset-0"
+                          style={{
+                            background: config.reflection,
+                            opacity: isHovered ? 1 : 0.6,
+                          }}
+                          animate={{
+                            opacity: isHovered ? 1 : 0.6,
+                          }}
+                          transition={{ duration: 0.3 }}
+                        />
+                        
+                        {/* Hover Glow */}
+                        <motion.div
+                          className="absolute inset-0"
+                          animate={{
+                            opacity: isHovered ? 0.5 : 0,
+                          }}
+                          transition={{ duration: 0.4 }}
+                          style={{
+                            background: `radial-gradient(circle at 50% 0%, ${config.color}, transparent 80%)`,
+                          }}
+                        />
+
+                        {/* Icon */}
+                        <span className="absolute inset-0 flex items-center justify-center text-4xl filter drop-shadow-2xl">
+                          {isFinder ? '😊' : isTrash ? '🗑️' : config.icon}
+                        </span>
+
+                        {/* Bottom Shadow for depth */}
+                        <motion.div
+                          className="absolute -bottom-3 left-0 right-0 h-5 rounded-full"
+                          animate={{
+                            opacity: style.scale > 1 ? 0.5 : 0.2,
+                            scale: style.scale * 0.9,
+                            width: `${style.scale * 70}%`,
+                            left: `${(100 - style.scale * 70) / 2}%`,
+                          }}
+                          transition={{ duration: 0.2 }}
+                          style={{
+                            background: `radial-gradient(ellipse at center, rgba(0,0,0,0.5) 0%, transparent 80%)`,
+                            filter: 'blur(6px)',
+                          }}
+                        />
+                      </motion.div>
                     </motion.div>
-                    
-                    <span className="text-[9px] sm:text-[10px] md:text-xs font-medium text-foreground/80 group-hover:text-foreground transition-colors max-w-[50px] md:max-w-[60px] truncate text-center">
-                      {category.name}
-                    </span>
+
+                    {/* App Label - Floating tooltip */}
+                    <motion.div
+                      className="absolute left-1/2 -top-14 px-3 py-1.5 rounded-lg whitespace-nowrap pointer-events-none"
+                      initial={{ opacity: 0, y: 10, x: '-50%' }}
+                      animate={{
+                        opacity: style.scale > 1.8 ? 1 : 0,
+                        y: style.scale > 1.8 ? 0 : 10,
+                        x: '-50%',
+                        scale: 1,
+                      }}
+                      transition={{ 
+                        duration: 0.25,
+                        ease: "easeOut"
+                      }}
+                      style={{
+                        background: 'rgba(40, 40, 45, 0.95)',
+                        backdropFilter: 'blur(12px)',
+                        WebkitBackdropFilter: 'blur(12px)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        boxShadow: '0 15px 25px -5px rgba(0, 0, 0, 0.4)',
+                        color: 'white',
+                        fontSize: '0.8rem',
+                        fontWeight: '500',
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                        zIndex: 100,
+                      }}
+                    >
+                      {isFinder ? 'Finder' : isTrash ? 'Trash' : category.name}
+                      {/* Tooltip Arrow */}
+                      <div 
+                        className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 rotate-45"
+                        style={{
+                          background: 'rgba(40, 40, 45, 0.95)',
+                          borderRight: '1px solid rgba(255, 255, 255, 0.2)',
+                          borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+                        }}
+                      />
+                    </motion.div>
+
+                    {/* Running App Indicator */}
+                    {index === 2 && (
+                      <motion.div
+                        className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full"
+                        animate={{
+                          scale: style.scale > 1.8 ? 2 : 1,
+                          backgroundColor: style.scale > 1.8 ? '#fff' : 'rgba(255,255,255,0.8)',
+                        }}
+                        transition={{ duration: 0.2 }}
+                        style={{
+                          boxShadow: '0 0 10px rgba(255,255,255,0.6)',
+                        }}
+                      />
+                    )}
                   </Link>
                 </motion.div>
               );
             })}
           </div>
+
+          {/* Dock Reflection */}
+          <motion.div
+            className="absolute -bottom-3 left-0 right-0 h-8 rounded-b-[40px]"
+            animate={{
+              opacity: mousePosition ? 0.4 : 0.25,
+            }}
+            transition={{ duration: 0.3 }}
+            style={{
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 100%)',
+              filter: 'blur(6px)',
+            }}
+          />
         </div>
       </motion.div>
+
+      {/* Ambient Light Effect */}
+      <motion.div
+        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2/3 h-24 rounded-full pointer-events-none"
+        animate={{
+          opacity: mousePosition ? 0.5 : 0.25,
+          scale: mousePosition ? 1.3 : 1,
+          x: mousePosition ? mousePosition.x * 40 : 0,
+        }}
+        transition={{ 
+          type: "spring",
+          stiffness: 200,
+          damping: 25
+        }}
+        style={{
+          background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.35) 0%, transparent 80%)',
+          filter: 'blur(25px)',
+        }}
+      />
+
+      <style>{`
+        /* Ultra-smooth transitions */
+        .dock-icon {
+          transition: all 0.25s cubic-bezier(0.23, 1, 0.32, 1);
+          will-change: transform, margin, opacity;
+        }
+
+        /* Click effect */
+        .dock-icon:active {
+          transform: scale(0.96) translateY(3px) !important;
+          transition: transform 0.1s ease !important;
+        }
+
+        /* Smooth 3D perspective */
+        .dock-container {
+          perspective: 1000px;
+        }
+
+        /* Smooth scrolling */
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+          .dock-container {
+            min-width: 90vw !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+          }
+          
+          .dock-icon {
+            width: 56px !important;
+            height: 56px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

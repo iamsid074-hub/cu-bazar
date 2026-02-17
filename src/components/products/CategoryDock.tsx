@@ -117,7 +117,7 @@ export function CategoryDock({ categories }: CategoryDockProps) {
           icon: 56, // w-14 h-14
           text: 'text-2xl',
           label: 'text-xs',
-          gap: 'gap-2',
+          gap: 12, // px - consistent spacing
           containerPadding: 'px-3 py-4',
         };
       case 'tablet':
@@ -125,7 +125,7 @@ export function CategoryDock({ categories }: CategoryDockProps) {
           icon: 64, // w-16 h-16
           text: 'text-3xl',
           label: 'text-sm',
-          gap: 'gap-2.5',
+          gap: 14, // px - consistent spacing
           containerPadding: 'px-4 py-5',
         };
       case 'desktop':
@@ -133,7 +133,7 @@ export function CategoryDock({ categories }: CategoryDockProps) {
           icon: 72, // w-20 h-20
           text: 'text-4xl',
           label: 'text-xs',
-          gap: 'gap-4',
+          gap: 16, // px - consistent spacing
           containerPadding: 'px-10 pb-5 pt-3',
         };
     }
@@ -223,7 +223,7 @@ export function CategoryDock({ categories }: CategoryDockProps) {
               WebkitOverflowScrolling: 'touch',
             }}
           >
-            <div className={`flex ${sizes.gap} min-w-max ${sizes.containerPadding}`}>
+            <div className={`flex min-w-max ${sizes.containerPadding}`} style={{ gap: `${sizes.gap}px` }}>
               {categories.map((category, index) => {
                 const config = macIconConfig[category.icon || 'Package'] || macIconConfig.Package;
                 const isFinder = index === 0;

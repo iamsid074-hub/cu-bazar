@@ -55,10 +55,27 @@ export function CategoryDock({ categories }: CategoryDockProps) {
   const dockRef = useRef<HTMLDivElement>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null);
-  const [iconPositions, setIconPositions] = useState<{ left: number; width: number }[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Track mouse position for smooth magnification
+  // Check if mobile on mount and resize
   useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Desktop mouse tracking
+  useEffect(() => {
+    if (isMobile) return;
+    
     const handleMouseMove = (e: MouseEvent) => {
       if (dockRef.current) {
         const rect = dockRef.current.getBoundingClientRect();
@@ -85,57 +102,63 @@ export function CategoryDock({ categories }: CategoryDockProps) {
         dock.removeEventListener('mouseleave', handleMouseLeave);
       }
     };
-  }, []);
+  }, [isMobile]);
 
-  // Calculate icon positions for smooth spacing
-  useEffect(() => {
-    if (dockRef.current && categories.length > 0) {
-      const icons = dockRef.current.querySelectorAll('.dock-icon');
-      const positions = Array.from(icons).map(icon => {
-        const rect = icon.getBoundingClientRect();
-        const dockRect = dockRef.current!.getBoundingClientRect();
-        return {
-          left: rect.left - dockRect.left,
-          width: rect.width,
-        };
-      });
-      setIconPositions(positions);
-    }
-  }, [categories, hoveredIndex]);
+  // Mobile touch scroll handling
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
 
-  // Calculate smooth scale based on distance to hovered icon
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartX || !scrollContainerRef.current) return;
+    
+    const touchEndX = e.touches[0].clientX;
+    const diff = touchStartX - touchEndX;
+    const maxScroll = scrollContainerRef.current.scrollWidth - scrollContainerRef.current.clientWidth;
+    
+    setScrollPosition(prev => {
+      const newPos = Math.max(0, Math.min(maxScroll, prev + diff));
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollLeft = newPos;
+      }
+      return newPos;
+    });
+    
+    setTouchStartX(touchEndX);
+  };
+
+  const handleTouchEnd = () => {
+    setTouchStartX(null);
+  };
+
+  // Desktop scale calculation
   const getIconTransform = (index: number) => {
-    if (hoveredIndex === null) return { scale: 1, lift: 0, rotateX: 0, rotateY: 0, marginX: 0 };
+    if (isMobile || hoveredIndex === null) return { scale: 1, lift: 0, rotateX: 0, rotateY: 0, marginX: 0 };
     
     const distance = Math.abs(index - hoveredIndex);
-    const maxDistance = 4; // Increased for smoother falloff
+    const maxDistance = 4;
     
     if (distance > maxDistance) return { scale: 1, lift: 0, rotateX: 0, rotateY: 0, marginX: 0 };
     
-    // Ultra-smooth falloff using smoothstep function
     const t = Math.max(0, 1 - distance / maxDistance);
-    const smoothT = t * t * (3 - 2 * t); // Smoothstep interpolation
+    const smoothT = t * t * (3 - 2 * t);
     
-    // Scale ranges with smoother progression
     const scaleMap = [2.4, 2.0, 1.6, 1.3, 1.1];
     const scale = 1 + (scaleMap[distance] - 1) * smoothT;
     
-    // Progressive lift with easing
     const liftMap = [28, 22, 16, 8, 3];
     const lift = liftMap[distance] * smoothT;
     
-    // Dynamic margin to prevent overlapping
     const marginMap = [32, 24, 16, 8, 4];
     const marginX = marginMap[distance] * smoothT;
     
-    // Subtle 3D rotation based on mouse position
     const rotateX = mousePosition?.y ? mousePosition.y * (3 - distance) : 0;
     const rotateY = mousePosition?.x ? mousePosition.x * (3 - distance) : 0;
     
     return { scale, lift, rotateX, rotateY, marginX };
   };
 
-  // Calculate dynamic spacing based on hover state
+  // Desktop spacing
   const getIconStyle = (index: number) => {
     const transform = getIconTransform(index);
     
@@ -150,6 +173,114 @@ export function CategoryDock({ categories }: CategoryDockProps) {
     };
   };
 
+  // Mobile: Compact grid view
+  if (isMobile) {
+    return (
+      <div className="relative w-full py-6">
+        {/* Mobile Background */}
+        <div className="absolute inset-0 overflow-hidden rounded-2xl">
+          <div 
+            className="w-full h-full bg-cover bg-center"
+            style={{
+              backgroundImage: 'url("https://512pixels.net/wp-content/uploads/2020/06/10-15-Day-thumb.jpg")',
+              opacity: 0.8,
+            }}
+          />
+          <div className="absolute inset-0 bg-black/30" />
+        </div>
+
+        {/* Mobile Categories Grid */}
+        <div className="relative px-4">
+          <h2 className="text-white text-lg font-semibold mb-3 px-1">Categories</h2>
+          
+          {/* Horizontal Scrollable Categories */}
+          <div 
+            ref={scrollContainerRef}
+            className="overflow-x-auto scrollbar-hide pb-2"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            style={{
+              scrollBehavior: 'smooth',
+              WebkitOverflowScrolling: 'touch',
+            }}
+          >
+            <div className="flex gap-3 min-w-max px-1">
+              {categories.map((category, index) => {
+                const config = macIconConfig[category.icon || 'Package'] || macIconConfig.Package;
+                const isFinder = index === 0;
+                const isTrash = index === categories.length - 1;
+
+                return (
+                  <motion.div
+                    key={category.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="flex-shrink-0"
+                  >
+                    <Link
+                      to={`/browse?category=${category.name.toLowerCase()}`}
+                      className="flex flex-col items-center gap-1"
+                    >
+                      {/* Mobile Icon */}
+                      <div 
+                        className="w-16 h-16 rounded-xl overflow-hidden relative active:scale-95 transition-transform duration-150"
+                        style={{
+                          background: `linear-gradient(145deg, ${config.color}, ${config.color}dd)`,
+                          boxShadow: '0 8px 16px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.2) inset',
+                        }}
+                      >
+                        <div 
+                          className="absolute inset-0"
+                          style={{
+                            background: config.reflection,
+                            opacity: 0.5,
+                          }}
+                        />
+                        <span className="absolute inset-0 flex items-center justify-center text-3xl">
+                          {isFinder ? '😊' : isTrash ? '🗑️' : config.icon}
+                        </span>
+                      </div>
+                      
+                      {/* Mobile Label */}
+                      <span className="text-xs font-medium text-white bg-black/50 px-2 py-0.5 rounded-full backdrop-blur-sm">
+                        {isFinder ? 'Finder' : isTrash ? 'Trash' : category.name}
+                      </span>
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Scroll Indicator */}
+          <div className="flex justify-center mt-2 gap-1">
+            {categories.map((_, i) => (
+              <div
+                key={i}
+                className={`h-1 rounded-full transition-all duration-300 ${
+                  i === Math.floor(scrollPosition / 80) ? 'w-4 bg-white' : 'w-1 bg-white/50'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+
+        <style>{`
+          .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+          }
+          .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  // Desktop: Mac-style dock
   return (
     <div className="relative w-full py-16 md:py-20">
       {/* Dynamic Gradient Background */}
@@ -166,14 +297,13 @@ export function CategoryDock({ categories }: CategoryDockProps) {
         <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px]" />
       </div>
 
-      {/* Main Dock Container */}
+      {/* Desktop Dock */}
       <motion.div
         initial={{ opacity: 0, y: 100 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         className="relative flex justify-center"
       >
-        {/* Dock Base - Extended width */}
         <div 
           ref={dockRef}
           className="relative px-10 pb-5 pt-3 rounded-[40px]"
@@ -186,10 +316,10 @@ export function CategoryDock({ categories }: CategoryDockProps) {
               0 0 0 1px rgba(255, 255, 255, 0.12) inset,
               0 -2px 0 rgba(0, 0, 0, 0.2) inset
             `,
-            minWidth: `${Math.max(categories.length * 80, 400)}px`, // Dynamic min width
+            minWidth: `${Math.max(categories.length * 80, 400)}px`,
           }}
         >
-          {/* Dock Highlight Line */}
+          {/* Dock Highlight */}
           <motion.div 
             className="absolute top-0 left-10 right-10 h-[2px] rounded-full"
             animate={{
@@ -200,10 +330,10 @@ export function CategoryDock({ categories }: CategoryDockProps) {
                     rgba(255,255,255,0.1) 100%)`
                 : 'linear-gradient(90deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.2) 100%)',
             }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
+            transition={{ duration: 0.4 }}
           />
 
-          {/* Icons Container with increased gap */}
+          {/* Desktop Icons */}
           <div className="flex items-end justify-center gap-4">
             {categories.map((category, index) => {
               const config = macIconConfig[category.icon || 'Package'] || macIconConfig.Package;
@@ -216,25 +346,13 @@ export function CategoryDock({ categories }: CategoryDockProps) {
                 <motion.div
                   key={category.id}
                   initial={{ opacity: 0, scale: 0.5, y: 20 }}
-                  animate={{ 
-                    opacity: 1, 
-                    scale: 1,
-                    y: 0,
-                    transition: { 
-                      duration: 0.6, 
-                      delay: index * 0.05,
-                      ease: [0.16, 1, 0.3, 1]
-                    }
-                  }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.05 }}
                   className="dock-icon relative"
                   onHoverStart={() => setHoveredIndex(index)}
                   onHoverEnd={() => setHoveredIndex(null)}
                 >
-                  <Link
-                    to={`/browse?category=${category.name.toLowerCase()}`}
-                    className="block relative"
-                  >
-                    {/* Icon Container with smooth transforms */}
+                  <Link to={`/browse?category=${category.name.toLowerCase()}`} className="block relative">
                     <motion.div
                       className="relative cursor-pointer"
                       animate={{
@@ -252,13 +370,12 @@ export function CategoryDock({ categories }: CategoryDockProps) {
                         mass: 0.6,
                       }}
                       style={{
+                        width: '72px',
+                        height: '72px',
                         transformStyle: 'preserve-3d',
                         transformOrigin: 'center bottom',
-                        width: '72px', // Larger icon base
-                        height: '72px',
                       }}
                     >
-                      {/* Icon Background with depth */}
                       <motion.div
                         className="w-full h-full rounded-2xl overflow-hidden relative"
                         style={{
@@ -270,37 +387,24 @@ export function CategoryDock({ categories }: CategoryDockProps) {
                           `,
                         }}
                       >
-                        {/* Reflection Layer */}
                         <motion.div 
                           className="absolute inset-0"
-                          style={{
-                            background: config.reflection,
-                            opacity: isHovered ? 1 : 0.6,
-                          }}
-                          animate={{
-                            opacity: isHovered ? 1 : 0.6,
-                          }}
-                          transition={{ duration: 0.3 }}
+                          style={{ background: config.reflection }}
+                          animate={{ opacity: isHovered ? 1 : 0.6 }}
                         />
                         
-                        {/* Hover Glow */}
                         <motion.div
                           className="absolute inset-0"
-                          animate={{
-                            opacity: isHovered ? 0.5 : 0,
-                          }}
-                          transition={{ duration: 0.4 }}
+                          animate={{ opacity: isHovered ? 0.5 : 0 }}
                           style={{
                             background: `radial-gradient(circle at 50% 0%, ${config.color}, transparent 80%)`,
                           }}
                         />
 
-                        {/* Icon */}
                         <span className="absolute inset-0 flex items-center justify-center text-4xl filter drop-shadow-2xl">
                           {isFinder ? '😊' : isTrash ? '🗑️' : config.icon}
                         </span>
 
-                        {/* Bottom Shadow for depth */}
                         <motion.div
                           className="absolute -bottom-3 left-0 right-0 h-5 rounded-full"
                           animate={{
@@ -309,7 +413,6 @@ export function CategoryDock({ categories }: CategoryDockProps) {
                             width: `${style.scale * 70}%`,
                             left: `${(100 - style.scale * 70) / 2}%`,
                           }}
-                          transition={{ duration: 0.2 }}
                           style={{
                             background: `radial-gradient(ellipse at center, rgba(0,0,0,0.5) 0%, transparent 80%)`,
                             filter: 'blur(6px)',
@@ -318,35 +421,27 @@ export function CategoryDock({ categories }: CategoryDockProps) {
                       </motion.div>
                     </motion.div>
 
-                    {/* App Label - Floating tooltip */}
+                    {/* Desktop Tooltip */}
                     <motion.div
                       className="absolute left-1/2 -top-14 px-3 py-1.5 rounded-lg whitespace-nowrap pointer-events-none"
-                      initial={{ opacity: 0, y: 10, x: '-50%' }}
                       animate={{
                         opacity: style.scale > 1.8 ? 1 : 0,
                         y: style.scale > 1.8 ? 0 : 10,
                         x: '-50%',
-                        scale: 1,
                       }}
-                      transition={{ 
-                        duration: 0.25,
-                        ease: "easeOut"
-                      }}
+                      transition={{ duration: 0.25 }}
                       style={{
                         background: 'rgba(40, 40, 45, 0.95)',
                         backdropFilter: 'blur(12px)',
-                        WebkitBackdropFilter: 'blur(12px)',
                         border: '1px solid rgba(255, 255, 255, 0.2)',
                         boxShadow: '0 15px 25px -5px rgba(0, 0, 0, 0.4)',
                         color: 'white',
                         fontSize: '0.8rem',
                         fontWeight: '500',
                         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-                        zIndex: 100,
                       }}
                     >
                       {isFinder ? 'Finder' : isTrash ? 'Trash' : category.name}
-                      {/* Tooltip Arrow */}
                       <div 
                         className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 rotate-45"
                         style={{
@@ -357,7 +452,7 @@ export function CategoryDock({ categories }: CategoryDockProps) {
                       />
                     </motion.div>
 
-                    {/* Running App Indicator */}
+                    {/* Running Indicator */}
                     {index === 2 && (
                       <motion.div
                         className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full"
@@ -365,10 +460,7 @@ export function CategoryDock({ categories }: CategoryDockProps) {
                           scale: style.scale > 1.8 ? 2 : 1,
                           backgroundColor: style.scale > 1.8 ? '#fff' : 'rgba(255,255,255,0.8)',
                         }}
-                        transition={{ duration: 0.2 }}
-                        style={{
-                          boxShadow: '0 0 10px rgba(255,255,255,0.6)',
-                        }}
+                        style={{ boxShadow: '0 0 10px rgba(255,255,255,0.6)' }}
                       />
                     )}
                   </Link>
@@ -380,10 +472,7 @@ export function CategoryDock({ categories }: CategoryDockProps) {
           {/* Dock Reflection */}
           <motion.div
             className="absolute -bottom-3 left-0 right-0 h-8 rounded-b-[40px]"
-            animate={{
-              opacity: mousePosition ? 0.4 : 0.25,
-            }}
-            transition={{ duration: 0.3 }}
+            animate={{ opacity: mousePosition ? 0.4 : 0.25 }}
             style={{
               background: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 100%)',
               filter: 'blur(6px)',
@@ -392,7 +481,7 @@ export function CategoryDock({ categories }: CategoryDockProps) {
         </div>
       </motion.div>
 
-      {/* Ambient Light Effect */}
+      {/* Ambient Light */}
       <motion.div
         className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2/3 h-24 rounded-full pointer-events-none"
         animate={{
@@ -400,58 +489,12 @@ export function CategoryDock({ categories }: CategoryDockProps) {
           scale: mousePosition ? 1.3 : 1,
           x: mousePosition ? mousePosition.x * 40 : 0,
         }}
-        transition={{ 
-          type: "spring",
-          stiffness: 200,
-          damping: 25
-        }}
+        transition={{ type: "spring", stiffness: 200, damping: 25 }}
         style={{
           background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.35) 0%, transparent 80%)',
           filter: 'blur(25px)',
         }}
       />
-
-      <style>{`
-        /* Ultra-smooth transitions */
-        .dock-icon {
-          transition: all 0.25s cubic-bezier(0.23, 1, 0.32, 1);
-          will-change: transform, margin, opacity;
-        }
-
-        /* Click effect */
-        .dock-icon:active {
-          transform: scale(0.96) translateY(3px) !important;
-          transition: transform 0.1s ease !important;
-        }
-
-        /* Smooth 3D perspective */
-        .dock-container {
-          perspective: 1000px;
-        }
-
-        /* Smooth scrolling */
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-          .dock-container {
-            min-width: 90vw !important;
-            padding-left: 1rem !important;
-            padding-right: 1rem !important;
-          }
-          
-          .dock-icon {
-            width: 56px !important;
-            height: 56px !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }
